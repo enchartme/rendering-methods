@@ -21,7 +21,7 @@
       position: absolute;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      cursor: crosshair;
+      cursor: default;
     }
   </style>
 </head>
@@ -42,12 +42,12 @@
 
   <div class="controls">
     <span>Distribution:</span>
-    <button class="btn active" id="btn-uniform">Uniform</button>
-    <button class="btn"        id="btn-normal" >Normal</button>
+    <button class="btn"        id="btn-uniform">Uniform</button>
+    <button class="btn active" id="btn-normal" >Normal</button>
     <div class="controls-sep"></div>
     <span>Points:</span>
     <button class="btn" id="btn-div10">&divide;10</button>
-    <span id="n-display" style="font-size:0.85rem;color:#444;min-width:3.5rem;text-align:center;">100</span>
+    <span id="n-display" style="font-size:0.85rem;color:#444;min-width:3.5rem;text-align:center;">1 000</span>
     <button class="btn" id="btn-mul10">&times;10</button>
   </div>
 
@@ -90,6 +90,36 @@
     },
   });
 }</code></pre>
+  </div>
+
+  <div class="code-panel">
+    <p class="code-panel-label">Hover &amp; color</p>
+    <p class="code-panel-explainer">
+      deck.gl uses <strong>GPU picking</strong>: an off-screen render pass encodes every object
+      as a unique color; reading back one pixel identifies what's under the cursor in O(1)
+      regardless of point count. You only need to handle the state change in
+      <code>onHover</code> and declare a <code>getFillColor</code> accessor &mdash; deck.gl
+      schedules the repaint automatically.
+    </p>
+    <pre><code class="language-javascript">// deck.gl fires onHover after its GPU picking pass
+new Deck({
+  pickingRadius: 20,   // snap to nearest object within 20 px
+  onHover: ({ object }) => {
+    const newId = object ? object.id : null;
+    if (newId !== hoveredId) {
+      hoveredId = newId;
+      deckInstance.setProps({ layers: [buildLayer()] });
+    }
+  },
+});
+
+// Accessor re-runs per datum on every re-render
+getFillColor: d => d.id === hoveredId
+  ? [255, 105, 180, 255]  // hotpink
+  : [70,  130, 180, 178], // steelblue @ 70%
+
+// Declare dependency so deck.gl re-evaluates getFillColor on hover change
+updateTriggers: { getFillColor: [hoveredId] }</code></pre>
   </div>
 
   </div><!-- /.right-col -->
@@ -272,6 +302,7 @@ function buildLayer() {
       views: new OrthographicView({ id: 'ortho' }),
       viewState: { target: [300, 200, 0], zoom: 0 },
       controller: false,         // no pan/zoom interaction
+      getCursor: () => 'default', // suppress deck.gl's grab cursor
       pickingRadius: 20,         // snap to nearest dot within 20 px
 
       layers: [],
@@ -341,11 +372,11 @@ function buildLayer() {
     // INITIAL RENDER
     // ════════════════════════════════════════════════════════════════════════
 
-    // Bootstrap with uniform data — resize() fires via ResizeObserver and
-    // triggers the first render, but we also call it manually to be safe.
+    // Bootstrap — resize() fires via ResizeObserver and triggers the first
+    // render, but we also call it manually to be safe.
     requestAnimationFrame(() => {
       resize();
-      transition(generateUniform(100));
+      transition(generateNormal(1000));
     });
 
     initControls({ onRender: transition });

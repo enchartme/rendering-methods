@@ -12,7 +12,7 @@
       display: block;
       width: 100%;
       height: 100%;
-      cursor: crosshair;
+      cursor: default;
     }
   </style>
 </head>
@@ -33,12 +33,12 @@
 
   <div class="controls">
     <span>Distribution:</span>
-    <button class="btn active" id="btn-uniform">Uniform</button>
-    <button class="btn"        id="btn-normal" >Normal</button>
+    <button class="btn"        id="btn-uniform">Uniform</button>
+    <button class="btn active" id="btn-normal" >Normal</button>
     <div class="controls-sep"></div>
     <span>Points:</span>
     <button class="btn" id="btn-div10">&divide;10</button>
-    <span id="n-display" style="font-size:0.85rem;color:#444;min-width:3.5rem;text-align:center;">100</span>
+    <span id="n-display" style="font-size:0.85rem;color:#444;min-width:3.5rem;text-align:center;">1 000</span>
     <button class="btn" id="btn-mul10">&times;10</button>
   </div>
 
@@ -52,36 +52,88 @@
   <div class="code-panel">
     <p class="code-panel-label">Key concept &mdash; manual enter/update/exit in <code>transition()</code></p>
     <p class="code-panel-explainer">
-      A Canvas 2D context gives you a <strong>immediate-mode</strong> drawing surface: every frame you
+      A Canvas 2D context gives you <strong>immediate-mode</strong> drawing surface: every frame you
       clear the canvas and repaint everything from scratch. There are no persistent objects in the DOM,
       so you must track your own <em>particle array</em> and implement enter/update/exit logic yourself.
       The payoff is raw speed &mdash; drawing 100 000 circles via <code>ctx.arc()</code> in a
-      <code>requestAnimationFrame</code> loop is orders of magnitude faster than equivalent SVG elements.
+      <code>requestAnimationFrame</code> loop is orders of magnitude faster than equivalent SVG elements.      Note that <strong>all of this still runs on the CPU</strong>: what Canvas skips is the DOM's
+      retained-mode scene graph, not the CPU drawing work itself. The GPU only gets involved at the
+      very end, blitting the finished bitmap to the display.    </p>
+    <pre><code class="language-javascript">function drawDots() {
+    // compute current positions for all particles
+    const rendered = particles.map(p => getRendered(p));
+
+    // find nearest dot to the cursor
+    let minDist2 = HOVER_PX * HOVER_PX;
+    hoveredIdx = -1;
+    for (let i = 0; i < particles.length; i++) {
+    const { cx, cy } = rendered[i];
+    const d2 = (cx - mouseX) ** 2 + (cy - mouseY) ** 2;
+    if (d2 < minDist2) { minDist2 = d2; hoveredIdx = i; }
+    }
+
+    // draw — hovered dot last so it isn't obscured
+    for (let pass = 0; pass < 2; pass++) {
+    for (let i = 0; i < particles.length; i++) {
+        const isHovered = i === hoveredIdx;
+        if (pass === 0 && isHovered)  continue; // draw normal dots first
+        if (pass === 1 && !isHovered) continue; // draw hovered dot on top
+
+        const { cx, cy, r } = rendered[i];
+        if (r <= 0) continue;
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+
+        if (isHovered) {
+        ctx.fillStyle   = 'hotpink';
+        ctx.strokeStyle = 'hotpink';
+        ctx.lineWidth   = 0.5;
+        } else {
+        ctx.fillStyle   = 'rgba(70,130,180,0.7)'; // steelblue @ 70%
+        ctx.strokeStyle = '#1a6496';
+        ctx.lineWidth   = 0.5;
+        }
+
+        ctx.fill();
+        ctx.stroke();
+    }
+}
+    </code></pre>
+  </div>
+
+  <div class="code-panel">
+    <p class="code-panel-label">Hover &amp; color</p>
+    <p class="code-panel-explainer">
+      A canvas is just pixels &mdash; it has no built-in hit-testing. You track the mouse yourself
+      and run a nearest-neighbour search every frame. To prevent a hovered dot from being
+      obscured by its neighbours, use a two-pass draw: paint all normal dots first, then
+      overdraw the highlighted one on top.
     </p>
-    <pre><code class="language-javascript">function transition(newData) {
-  // D3's declarative join, re-implemented manually on a particle array
-  const keep = Math.min(particles.length, newData.length);
-  const next  = [];
+    <pre><code class="language-javascript">// 1. Track the mouse position
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = e.clientX - rect.left;
+  mouseY = e.clientY - rect.top;
+  if (!rafId) render();   // repaint when animation is idle
+});
 
-  // Keep — move existing dots to their new position
-  for (let i = 0; i &lt; keep; i++) {
-    next.push({
-      ...particles[i],
-      dx: newData[i].x, dy: newData[i].y,
-      toCx: xPx(newData[i].x), toCy: yPx(newData[i].y),
-      phase: 'active',
-    });
-  }
-  // Enter — place new dots at their target position immediately
-  for (let i = keep; i &lt; newData.length; i++) {
-    const cx = xPx(newData[i].x), cy = yPx(newData[i].y);
-    next.push({ fromCx: cx, toCx: cx, fromCy: cy, toCy: cy, phase: 'active' });
-  }
-  // Exit — removed dots are dropped immediately
+canvas.addEventListener('mouseleave', () => {
+  mouseX = -Infinity;
+  if (!rafId) render();
+});
 
-  particles = next;
-  startAnim(); // kicks off a requestAnimationFrame loop
-}</code></pre>
+// 2. Nearest-neighbour search (inside drawDots)
+let minDist2 = HOVER_PX * HOVER_PX;
+hoveredIdx = -1;
+for (let i = 0; i &lt; particles.length; i++) {
+  const { cx, cy } = rendered[i];
+  const d2 = (cx - mouseX)**2 + (cy - mouseY)**2;
+  if (d2 &lt; minDist2) { minDist2 = d2; hoveredIdx = i; }
+}
+
+// 3. Color branch — hovered dot is drawn on top in the second pass
+ctx.fillStyle = isHovered ? 'hotpink' : 'rgba(70,130,180,0.7)';</code></pre>
   </div>
 
   </div><!-- /.right-col -->
@@ -336,7 +388,7 @@
 
     // ── Initial draw ──────────────────────────────────────────────────────────
     resizeCanvas(); // sets CSS_W/H/plotW/plotH and sizes the canvas element
-    const initData = generateUniform(100);
+    const initData = generateNormal(1000);
     particles = initData.map(d => ({
       dx: d.x, dy: d.y,
       fromCx: xPx(d.x), fromCy: yPx(d.y), fromR: 4,

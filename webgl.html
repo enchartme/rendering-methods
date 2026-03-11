@@ -22,7 +22,7 @@
       position: absolute;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      cursor: crosshair;
+      cursor: default;
     }
   </style>
 </head>
@@ -43,12 +43,12 @@
 
   <div class="controls">
     <span>Distribution:</span>
-    <button class="btn active" id="btn-uniform">Uniform</button>
-    <button class="btn"        id="btn-normal" >Normal</button>
+    <button class="btn"        id="btn-uniform">Uniform</button>
+    <button class="btn active" id="btn-normal" >Normal</button>
     <div class="controls-sep"></div>
     <span>Points:</span>
     <button class="btn" id="btn-div10">&divide;10</button>
-    <span id="n-display" style="font-size:0.85rem;color:#444;min-width:3.5rem;text-align:center;">100</span>
+    <span id="n-display" style="font-size:0.85rem;color:#444;min-width:3.5rem;text-align:center;">1&#8239;000</span>
     <button class="btn" id="btn-mul10">&times;10</button>
   </div>
 
@@ -69,6 +69,8 @@
       the <em>fragment shader</em> decides the colour of each pixel. There is no CPU drawing loop &mdash;
       geometry lives in GPU memory and the hardware renders millions of points per frame, making this
       the fastest approach for large datasets.
+      Unlike Canvas 2D, which <em>bypasses the DOM but still draws on the CPU</em>, WebGL moves the
+      actual rasterization work onto the GPU, so the CPU is free while pixels are being painted.
     </p>
     <pre><code class="language-glsl">// Vertex shader — runs once per dot, positions it in clip space
 attribute vec2  a_pos;    // data-space [0, 1]
@@ -100,6 +102,33 @@ void main() {
   );
   gl_FragColor = vec4(color, mix(0.7, 1.0, v_hover) * alpha);
 }</code></pre>
+  </div>
+
+  <div class="code-panel">
+    <p class="code-panel-label">Hover &amp; color</p>
+    <p class="code-panel-explainer">
+      WebGL has no concept of objects &mdash; only raw vertices. Hit-testing runs on the CPU:
+      a nearest-neighbour loop each frame writes a <code>0.0</code> or <code>1.0</code> flag per
+      point into a typed array. That array is uploaded as a per-vertex attribute
+      (<code>a_hover</code>) and the fragment shader uses <code>mix()</code> to blend
+      steelblue &rarr; hotpink without branching.
+    </p>
+    <pre><code class="language-javascript">// CPU: nearest-neighbour search, result stored in hoverArr
+for (let i = 0; i &lt; count; i++) {
+  const d2 = (px - mouseX)**2 + (py - mouseY)**2;
+  if (d2 &lt; minDist2) { minDist2 = d2; hoveredIdx = i; }
+}
+for (let i = 0; i &lt; count; i++)
+  hoverArr[i] = i === hoveredIdx ? 1.0 : 0.0;
+
+// Upload as a per-vertex attribute on every frame
+gl.bufferData(gl.ARRAY_BUFFER, hoverArr, gl.DYNAMIC_DRAW);</code></pre>
+    <pre><code class="language-glsl">// Fragment shader: GPU blends color based on the v_hover varying
+vec3  blue  = vec3(0.274, 0.510, 0.706); // steelblue
+vec3  pink  = vec3(1.0,   0.412, 0.706); // hotpink
+vec3  color = mix(blue, pink, v_hover);  // 0.0 = blue, 1.0 = pink
+float baseA = mix(0.7, 1.0, v_hover);
+gl_FragColor = vec4(color, baseA * alpha);</code></pre>
   </div>
 
   </div><!-- /.right-col -->
@@ -506,7 +535,7 @@ void main() {
       if (!rafId) uploadAndDraw();
     });
 
-    const initData = generateUniform(100);
+    const initData = generateNormal(1000);
     particles = initData.map(d => ({
       phase: 'active',
       fromDX: d.x, fromDY: d.y,

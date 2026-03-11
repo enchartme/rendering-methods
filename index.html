@@ -35,7 +35,7 @@
       fill-opacity: 0.7;
       stroke: #1a6496;
       stroke-width: 0.5;
-      cursor: crosshair;
+      cursor: default;
       transition: fill 0.15s;
     }
 
@@ -61,12 +61,12 @@
 
   <div class="controls">
     <span>Distribution:</span>
-    <button class="btn active" id="btn-uniform">Uniform</button>
-    <button class="btn"        id="btn-normal" >Normal</button>
+    <button class="btn"        id="btn-uniform">Uniform</button>
+    <button class="btn active" id="btn-normal" >Normal</button>
     <div class="controls-sep"></div>
     <span>Points:</span>
     <button class="btn" id="btn-div10">&divide;10</button>
-    <span id="n-display" style="font-size:0.85rem;color:#444;min-width:3.5rem;text-align:center;">100</span>
+    <span id="n-display" style="font-size:0.85rem;color:#444;min-width:3.5rem;text-align:center;">1 000</span>
     <button class="btn" id="btn-mul10">&times;10</button>
   </div>
 
@@ -107,6 +107,25 @@
       // Exiting dots — remove immediately
       exit => exit.remove()
     );
+}</code></pre>
+  </div>
+
+  <div class="code-panel">
+    <p class="code-panel-label">Hover &amp; color</p>
+    <p class="code-panel-explainer">
+      Every <code>&lt;circle&gt;</code> is a real DOM node, so the browser's CSS engine handles
+      <code>:hover</code> intrinsically &mdash; no JavaScript, no hit-testing, no manual repaints.
+      A <code>transition: fill 0.15s</code> rule gives the smooth color change for free. This is
+      one of SVG's biggest ergonomic advantages over canvas-based renderers.
+    </p>
+    <pre><code class="language-css">/* SVG circles are DOM nodes — CSS :hover works out of the box */
+.dot {
+  fill: steelblue;
+  transition: fill 0.15s;
+}
+
+.dot:hover {
+  fill: hotpink;
 }</code></pre>
   </div>
 
@@ -164,7 +183,7 @@
     }
 
     resizeChart();
-    updateDots(generateUniform(100));
+    updateDots(generateNormal(1000));
 
     let resizeTimer;
     window.addEventListener("resize", () => {
