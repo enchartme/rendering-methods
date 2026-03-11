@@ -79,6 +79,14 @@
 
   <div class="code-panel">
     <p class="code-panel-label">Key concept &mdash; D3 data join in <code>updateDots()</code></p>
+    <p class="code-panel-explainer">
+      D3’s <strong>data join</strong> is the central idea: you bind an array of data to a selection of DOM
+      elements and D3 computes which elements are <em>new</em> (enter), <em>changed</em> (update), or
+      <em>removed</em> (exit). Each case is handled declaratively &mdash; you describe what the element
+      <em>should look like</em>, and D3 + SVG take care of rendering. Because every dot is a real
+      <code>&lt;circle&gt;</code> in the DOM, the browser handles hit-testing and CSS transitions for free,
+      but performance degrades fast once you have tens of thousands of elements.
+    </p>
     <pre><code class="language-javascript">function updateDots(newData) {
   g.selectAll(".dot")
     .data(newData)

@@ -61,6 +61,13 @@
 
   <div class="code-panel">
     <p class="code-panel-label">Key concept &mdash; declarative <code>ScatterplotLayer</code> in <code>buildLayer()</code></p>
+    <p class="code-panel-explainer">
+      deck.gl sits one level above raw WebGL: instead of writing shaders yourself you compose
+      pre-built <strong>layers</strong> and describe them declaratively (data, accessors, visual
+      encodings). The library re-renders on the GPU whenever props change and even interpolates
+      attributes like position and radius smoothly on the GPU &mdash; so you get WebGL-scale performance
+      without touching GLSL. Think of it as D3’s declarative style applied to a GPU render pipeline.
+    </p>
     <pre><code class="language-javascript">function buildLayer() {
   return new ScatterplotLayer({
     id: 'scatter',

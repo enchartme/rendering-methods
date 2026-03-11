@@ -62,6 +62,14 @@
 
   <div class="code-panel">
     <p class="code-panel-label">Key concept &mdash; GLSL shaders running on the GPU</p>
+    <p class="code-panel-explainer">
+      WebGL lets your JavaScript upload arrays of numbers (positions, sizes, colours) directly to the
+      <strong>GPU</strong>. Two small programs written in GLSL then run in parallel across every dot
+      simultaneously: the <em>vertex shader</em> converts data coordinates into screen coordinates, and
+      the <em>fragment shader</em> decides the colour of each pixel. There is no CPU drawing loop &mdash;
+      geometry lives in GPU memory and the hardware renders millions of points per frame, making this
+      the fastest approach for large datasets.
+    </p>
     <pre><code class="language-glsl">// Vertex shader — runs once per dot, positions it in clip space
 attribute vec2  a_pos;    // data-space [0, 1]
 attribute float a_size;   // radius in physical pixels (CSS r × dpr)
