@@ -28,6 +28,7 @@ function initControls({ minN = 10, onRender }) {
   }
 
   function updateSubtitle() {
+    if (!subtitle) return;
     const label = currentDist === 'uniform'
       ? 'Uniform(0, 1)'
       : 'Normal(\u03bc=0.5, \u03c3=0.15)';  // μ, σ

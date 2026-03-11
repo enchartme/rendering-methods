@@ -19,21 +19,29 @@ body {
   flex-direction: column;
 }
 
+.page-header {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
 h1 {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0;
   font-size: 1.4rem;
   color: #222;
+  white-space: nowrap;
 }
 
 .page-nav {
   display: flex;
   gap: 0.25rem;
-  margin-top: 0.5rem;
-  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
 }
 
 .page-nav a {
-  padding: 0.3rem 0.85rem;
+  padding: 0.3rem 0.7rem;
   font-size: 0.85rem;
   border: 1.5px solid #bbb;
   border-radius: 4px;
@@ -55,11 +63,6 @@ h1 {
   pointer-events: none;
 }
 
-p.subtitle {
-  margin-bottom: 1.5rem;
-  font-size: 0.9rem;
-  color: #666;
-}
 
 .chart-container {
   background: #fff;
@@ -118,7 +121,54 @@ p.subtitle {
   margin: 0 0.25rem;
 }
 
-.code-panel {
+/* ---- Two-column layout on wide viewports -------------------------------- */
+
+/* On narrow screens these are "transparent" — children flow as if the
+   wrappers don't exist and the existing stacked layout is unchanged. */
+.page-layout,
+.left-col,
+.right-col {
+  display: contents;
+}
+
+@media (min-width: 1025px) {
+  body {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .page-layout {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    gap: 2rem;
+  }
+
+  .left-col {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* chart fills remaining height of left column */
+  .left-col .chart-container {
+    flex: 1;
+    height: auto;
+  }
+
+  .right-col {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .right-col .code-panel {
+    margin-top: 0;
+  }
+}
   margin-top: 1.5rem;
   padding-bottom: 2.5rem;
 }
