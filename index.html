@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rendering Methods Comparison</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    #scatterplot {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .axis text {
+      font-size: 11px;
+      fill: #555;
+    }
+
+    .axis line,
+    .axis path {
+      stroke: #bbb;
+    }
+
+    .axis-label {
+      font-size: 12px;
+      fill: #444;
+    }
+
+    .dot {
+      fill: steelblue;
+      fill-opacity: 0.7;
+      stroke: #1a6496;
+      stroke-width: 0.5;
+      cursor: crosshair;
+      transition: fill 0.15s;
+    }
+
+    .dot:hover {
+      fill: hotpink;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Rendering Methods</h1>
+  <nav class="page-nav">
+    <a href="index.html" class="current">SVG</a>
+    <a href="canvas.html">Canvas</a>
+    <a href="webgl.html">WebGL</a>
+    <a href="deckgl.html">deck.gl</a>
+  </nav>
+  <p class="subtitle" id="subtitle">100 data points &mdash; <strong>Uniform(0, 1)</strong></p>
+
+  <div class="controls">
+    <span>Distribution:</span>
+    <button class="btn active" id="btn-uniform">Uniform</button>
+    <button class="btn"        id="btn-normal" >Normal</button>
+    <div class="controls-sep"></div>
+    <span>Points:</span>
+    <button class="btn" id="btn-div10">&divide;10</button>
+    <span id="n-display" style="font-size:0.85rem;color:#444;min-width:3.5rem;text-align:center;">100</span>
+    <button class="btn" id="btn-mul10">&times;10</button>
+  </div>
+
+  <div class="chart-container">
+    <svg id="scatterplot"></svg>
+  </div>
+
+  <div class="code-panel">
+    <p class="code-panel-label">Key concept &mdash; D3 data join in <code>updateDots()</code></p>
+    <pre><code class="language-javascript">function updateDots(newData) {
+  g.selectAll(".dot")
+    .data(newData)
+    .join(
+      // Entering dots — append a circle and grow from r=0
+      enter => enter.append("circle")
+        .attr("class", "dot")
+        .attr("cx", d => xScale(d.x))
+        .attr("cy", d => yScale(d.y))
+        .attr("r", 0)
+        .call(e => e.transition().duration(400)
+                    .ease(d3.easeCubicOut).attr("r", 4)),
+
+      // Updating dots — animate to the new position
+      update => update
+        .transition().duration(600).ease(d3.easeCubicInOut)
+        .attr("cx", d => xScale(d.x))
+        .attr("cy", d => yScale(d.y)),
+
+      // Exiting dots — shrink and remove from the DOM
+      exit => exit
+        .transition().duration(300).ease(d3.easeCubicIn)
+        .attr("r", 0).remove()
+    );
+}</code></pre>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="controls.js"></script>
+  <script>
+    // ── Chart skeleton (created once) ─────────────────────────────────────────
+    const margin = { top: 20, right: 20, bottom: 50, left: 55 };
+
+    const svg    = d3.select("#scatterplot");
+    const g      = svg.append("g");
+    const xScale = d3.scaleLinear().domain([0, 1]);
+    const yScale = d3.scaleLinear().domain([0, 1]);
+
+    // Axis groups + labels – created once, repositioned in resizeChart()
+    const xAxisG   = g.append("g").attr("class", "axis x-axis");
+    const xLabelEl = g.append("text").attr("class", "axis-label")
+                       .attr("text-anchor", "middle").text("X");
+    const yAxisG   = g.append("g").attr("class", "axis y-axis");
+    const yLabelEl = g.append("text").attr("class", "axis-label")
+                       .attr("transform", "rotate(-90)").attr("text-anchor", "middle").text("Y");
+
+    // ── Resize ────────────────────────────────────────────────────────────────
+    let chartW = 0, chartH = 0;
+
+    function resizeChart() {
+      const svgEl = document.getElementById("scatterplot");
+      chartW = svgEl.clientWidth  - margin.left - margin.right;
+      chartH = svgEl.clientHeight - margin.top  - margin.bottom;
+
+      g.attr("transform", `translate(${margin.left},${margin.top})`);
+      xScale.range([0, chartW]);
+      yScale.range([chartH, 0]);
+
+      xAxisG
+        .attr("transform", `translate(0,${chartH})`)
+        .call(d3.axisBottom(xScale).ticks(6).tickSize(-chartH))
+        .call(ax => ax.select(".domain").remove())
+        .call(ax => ax.selectAll(".tick line").attr("stroke", "#e8e8e8"));
+      xLabelEl.attr("x", chartW / 2).attr("y", chartH + 40);
+
+      yAxisG
+        .call(d3.axisLeft(yScale).ticks(6).tickSize(-chartW))
+        .call(ax => ax.select(".domain").remove())
+        .call(ax => ax.selectAll(".tick line").attr("stroke", "#e8e8e8"));
+      yLabelEl.attr("x", -chartH / 2).attr("y", -44);
+
+      // Snap existing dots to new positions (no animation on resize)
+      g.selectAll(".dot")
+        .attr("cx", d => xScale(d.x))
+        .attr("cy", d => yScale(d.y));
+    }
+
+    resizeChart();
+    updateDots(generateUniform(100));
+
+    let resizeTimer;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(resizeChart, 40);
+    });
+
+    // ── Update ────────────────────────────────────────────────────────────────
+    function updateDots(newData) {
+      g.selectAll(".dot")
+        .data(newData)
+        .join(
+          enter => enter.append("circle")
+            .attr("class", "dot")
+            .attr("cx", d => xScale(d.x))
+            .attr("cy", d => yScale(d.y))
+            .attr("r", 0)
+            .call(e => e.transition().duration(400).ease(d3.easeCubicOut).attr("r", 4)),
+          update => update
+            .transition().duration(600).ease(d3.easeCubicInOut)
+            .attr("cx", d => xScale(d.x))
+            .attr("cy", d => yScale(d.y)),
+          exit => exit
+            .transition().duration(300).ease(d3.easeCubicIn)
+            .attr("r", 0)
+            .remove()
+        );
+    }
+
+    initControls({ onRender: updateDots });
+    hljs.highlightAll();
+  </script>
+</body>
+</html>

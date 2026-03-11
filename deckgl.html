@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rendering Methods — deck.gl</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* Axis canvas — drawn first (lower z), grid lines + labels */
+    #axis-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+
+    /* deck.gl canvas created programmatically inside this container */
+    #deck-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      cursor: crosshair;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Rendering Methods</h1>
+  <nav class="page-nav">
+    <a href="index.html">SVG</a>
+    <a href="canvas.html">Canvas</a>
+    <a href="webgl.html">WebGL</a>
+    <a href="deckgl.html" class="current">deck.gl</a>
+  </nav>
+  <p class="subtitle" id="subtitle">100 data points &mdash; <strong>Uniform(0, 1)</strong></p>
+
+  <div class="controls">
+    <span>Distribution:</span>
+    <button class="btn active" id="btn-uniform">Uniform</button>
+    <button class="btn"        id="btn-normal" >Normal</button>
+    <div class="controls-sep"></div>
+    <span>Points:</span>
+    <button class="btn" id="btn-div10">&divide;10</button>
+    <span id="n-display" style="font-size:0.85rem;color:#444;min-width:3.5rem;text-align:center;">100</span>
+    <button class="btn" id="btn-mul10">&times;10</button>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="axis-canvas"></canvas>
+    <!-- deck.gl canvas inserted here by JS -->
+  </div>
+
+  <div class="code-panel">
+    <p class="code-panel-label">Key concept &mdash; declarative <code>ScatterplotLayer</code> in <code>buildLayer()</code></p>
+    <pre><code class="language-javascript">function buildLayer() {
+  return new ScatterplotLayer({
+    id: 'scatter',
+    data: [...particles, ...exitingParticles],
+
+    getPosition: d => dataToWorld(d.dx, d.dy),
+    getRadius:   d => d.targetR,
+    radiusUnits: 'pixels',
+
+    getFillColor: d => d.id === hoveredId
+      ? [255, 105, 180, 255]   // hotpink
+      : [70,  130, 180, 178],  // steelblue @ 70%
+
+    pickable: true,
+
+    // deck.gl interpolates GPU attributes automatically —
+    // no manual requestAnimationFrame loop needed
+    transitions: {
+      getPosition: { duration: 600, easing: cubicInOut },
+      getRadius:   { duration: 400, easing: cubicOut   },
+    },
+  });
+}</code></pre>
+  </div>
+
+  <!-- deck.gl standalone bundle — exposes window.deck -->
+  <script src="https://unpkg.com/deck.gl@latest/dist.min.js"></script>
+  <script src="data.js"></script>
+  <script src="controls.js"></script>
+
+  <script>
+    // ════════════════════════════════════════════════════════════════════════
+    // AXIS CANVAS (2-D — draws grid lines and tick labels)
+    // Rendered beneath the deck.gl canvas; pointer-events: none
+    // ════════════════════════════════════════════════════════════════════════
+
+    const axCanvas   = document.getElementById('axis-canvas');
+    const ax          = axCanvas.getContext('2d');
+    const dpr         = window.devicePixelRatio || 1;
+    const chartDiv    = document.querySelector('.chart-container');
+
+    // Create the deck.gl canvas explicitly so we control its sizing
+    const deckCanvas  = document.createElement('canvas');
+    deckCanvas.id     = 'deck-canvas';
+    chartDiv.appendChild(deckCanvas);
+
+    const margin = { top: 20, right: 20, bottom: 50, left: 55 };
+    let cssW, cssH, plotW, plotH;
+
+    const TICKS = [0, 0.2, 0.4, 0.6, 0.8, 1.0];
+
+    function drawAxes() {
+      // Resize axis canvas backing buffer to match physical pixels
+      axCanvas.width  = cssW * dpr;
+      axCanvas.height = cssH * dpr;
+      ax.scale(dpr, dpr);
+
+      ax.clearRect(0, 0, cssW, cssH);
+
+      const xPxAx = v => margin.left + v * plotW;
+      const yPxAx = v => margin.top  + (1 - v) * plotH;
+
+      // Grid lines
+      ax.strokeStyle = '#e8e8e8';
+      ax.lineWidth   = 1;
+      for (const v of TICKS) {
+        ax.beginPath();
+        ax.moveTo(xPxAx(v), margin.top);
+        ax.lineTo(xPxAx(v), margin.top + plotH);
+        ax.stroke();
+
+        ax.beginPath();
+        ax.moveTo(margin.left,         yPxAx(v));
+        ax.lineTo(margin.left + plotW, yPxAx(v));
+        ax.stroke();
+      }
+
+      // Tick labels
+      ax.fillStyle    = '#555';
+      ax.font         = `11px sans-serif`;
+      ax.textAlign    = 'center';
+      ax.textBaseline = 'top';
+      for (const v of TICKS) ax.fillText(v.toFixed(1), xPxAx(v), margin.top + plotH + 6);
+
+      ax.textAlign    = 'right';
+      ax.textBaseline = 'middle';
+      for (const v of TICKS) ax.fillText(v.toFixed(1), margin.left - 7, yPxAx(v));
+
+      // Axis labels
+      ax.fillStyle    = '#444';
+      ax.font         = '12px sans-serif';
+      ax.textAlign    = 'center';
+      ax.textBaseline = 'bottom';
+      ax.fillText('X', margin.left + plotW / 2, cssH - 4);
+
+      ax.save();
+      ax.translate(13, margin.top + plotH / 2);
+      ax.rotate(-Math.PI / 2);
+      ax.textBaseline = 'bottom';
+      ax.fillText('Y', 0, 0);
+      ax.restore();
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // PARTICLE MODEL
+    // Each particle: { id, dx, dy, targetR }
+    // deck.gl handles GPU-side attribute interpolation (position + radius).
+    // ════════════════════════════════════════════════════════════════════════
+
+    let particles  = [];  // current data array passed to deck.gl
+    let nextId     = 0;
+    let hoveredId  = null;
+
+    // Converters: data-space [0,1] → CSS pixel world coords for deck.gl CARTESIAN
+    // deck.gl OrthographicView (flipY:true default) matches CSS: y increases downward.
+    function dataToWorld(dx, dy) {
+      return [
+        margin.left + dx * plotW,
+        margin.top  + (1 - dy) * plotH
+      ];
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // ANIMATION CONSTANTS (easing callbacks for deck.gl transitions)
+    // ════════════════════════════════════════════════════════════════════════
+
+    const ANIM_MS  = 600;
+    const ENTER_MS = 400;
+    const EXIT_MS  = 300;
+
+    function cubicInOut(t) { return t < 0.5 ? 4*t*t*t : 1 - (-2*t+2)**3/2; }
+    function cubicOut(t)   { return 1 - (1-t)**3; }
+    function cubicIn(t)    { return t*t*t; }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // DECK.GL SETUP
+    // ════════════════════════════════════════════════════════════════════════
+
+    const { Deck, OrthographicView, ScatterplotLayer, COORDINATE_SYSTEM } = deck;
+
+    // Pending exit particles being animated out before removal
+    let exitingParticles = [];
+
+    function buildLayer() {
+      const allParticles = [...particles, ...exitingParticles];
+
+      return new ScatterplotLayer({
+        id: 'scatter',
+        data: allParticles,
+
+        // Position: convert data-space → CSS pixels (deck.gl CARTESIAN world space)
+        getPosition: d => dataToWorld(d.dx, d.dy),
+
+        // Radius in CSS pixels; transitions handle enter/exit grow animations
+        getRadius: d => d.targetR,
+        radiusUnits: 'pixels',
+
+        // steelblue (70% opacity) or hotpink on hover
+        getFillColor: d => d.id === hoveredId
+          ? [255, 105, 180, 255]
+          : [70, 130, 180, 178],
+
+        // Line width 0 (no stroke)
+        stroked: false,
+
+        coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
+
+        pickable: true,
+
+        updateTriggers: {
+          // Re-evaluate fill whenever hover changes or canvas resizes
+          getFillColor: [hoveredId],
+          // Re-project positions when canvas dimensions change
+          getPosition: [cssW, cssH, plotW, plotH],
+        },
+
+        // GPU-side attribute interpolation — no manual RAF loop needed
+        transitions: {
+          getPosition: { duration: ANIM_MS,  easing: cubicInOut },
+          getRadius:   { duration: ENTER_MS, easing: cubicOut   },
+        },
+      });
+    }
+
+    function updateDeckView() {
+      if (!deckInstance) return;
+      deckInstance.setProps({
+        width:  cssW,
+        height: cssH,
+        views: new OrthographicView({
+          id: 'ortho',
+          // flipY: true (default) — y increases downward, matching CSS
+        }),
+        viewState: {
+          target: [cssW / 2, cssH / 2, 0],
+          zoom:   0,
+          minZoom: -Infinity,
+          maxZoom:  Infinity,
+        },
+        layers: [buildLayer()],
+      });
+    }
+
+    const deckInstance = new Deck({
+      canvas: deckCanvas,        // use our own canvas element
+      width:  600,               // updated by resize()
+      height: 400,
+      useDevicePixels: true,
+
+      views: new OrthographicView({ id: 'ortho' }),
+      viewState: { target: [300, 200, 0], zoom: 0 },
+      controller: false,         // no pan/zoom interaction
+      pickingRadius: 20,         // snap to nearest dot within 20 px
+
+      layers: [],
+
+      onHover: ({ object }) => {
+        const newId = object ? object.id : null;
+        if (newId !== hoveredId) {
+          hoveredId = newId;
+          deckInstance.setProps({ layers: [buildLayer()] });
+        }
+      },
+    });
+
+    // ════════════════════════════════════════════════════════════════════════
+    // TRANSITION HELPER
+    // Merges old and new particle sets, triggering enter/exit animations via
+    // deck.gl's built-in radius transition.
+    // ════════════════════════════════════════════════════════════════════════
+
+    function transition(newPoints) {
+      const oldParticles = particles;
+      const newParticles = [];
+
+      // 1) Update / keep existing active particles (position animation via deck.gl)
+      for (let i = 0; i < Math.min(oldParticles.length, newPoints.length); i++) {
+        newParticles.push({
+          ...oldParticles[i],
+          dx: newPoints[i].x,
+          dy: newPoints[i].y,
+          targetR: 4,
+        });
+      }
+
+      // 2) Entering particles — start at radius 0 so deck.gl animates them in
+      for (let i = oldParticles.length; i < newPoints.length; i++) {
+        newParticles.push({
+          id: nextId++,
+          dx: newPoints[i].x,
+          dy: newPoints[i].y,
+          targetR: 0,
+        });
+      }
+
+      // 3) Exiting particles (count shrank) — animate radius to 0, then remove
+      if (oldParticles.length > newPoints.length) {
+        const exiting = oldParticles.slice(newPoints.length).map(p => ({
+          ...p,
+          targetR: 0,
+        }));
+        exitingParticles = [...exitingParticles, ...exiting];
+        setTimeout(() => {
+          // Remove them from the exiting set after the exit animation completes
+          exitingParticles = exitingParticles.filter(
+            ep => !exiting.find(p => p.id === ep.id)
+          );
+          deckInstance.setProps({ layers: [buildLayer()] });
+        }, EXIT_MS + 50);
+      }
+
+      particles = newParticles;
+      deckInstance.setProps({ layers: [buildLayer()] });
+
+      // 4) Trigger enter animation: bump targetR from 0 → 5 on next tick
+      if (newParticles.some(p => p.targetR === 0)) {
+        requestAnimationFrame(() => {
+          particles = particles.map(p => ({ ...p, targetR: 4 }));
+          deckInstance.setProps({ layers: [buildLayer()] });
+        });
+      }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // RESIZE
+    // ════════════════════════════════════════════════════════════════════════
+
+    function resize() {
+      const rect = chartDiv.getBoundingClientRect();
+      cssW  = rect.width;
+      cssH  = rect.height;
+      plotW = cssW  - margin.left - margin.right;
+      plotH = cssH  - margin.top  - margin.bottom;
+
+      drawAxes();
+      updateDeckView();
+    }
+
+    new ResizeObserver(resize).observe(chartDiv);
+
+    // ════════════════════════════════════════════════════════════════════════
+    // INITIAL RENDER
+    // ════════════════════════════════════════════════════════════════════════
+
+    // Bootstrap with uniform data — resize() fires via ResizeObserver and
+    // triggers the first render, but we also call it manually to be safe.
+    requestAnimationFrame(() => {
+      resize();
+      transition(generateUniform(100));
+    });
+
+    initControls({ onRender: transition });
+    hljs.highlightAll();
+
+  </script>
+</body>
+</html>
