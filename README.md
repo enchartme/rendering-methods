@@ -49,8 +49,14 @@ Install the [Live Server](https://marketplace.visualstudio.com/items?itemName=ri
 | **÷10** | Divide the point count by 10 (min 10) |
 | **×10** | Multiply the point count by 10 |
 
-## Dependencies (all CDN, no install needed)
+## Dependencies
 
-- [D3 v7](https://d3js.org/) — SVG page only
-- [deck.gl](https://deck.gl/) standalone bundle — deck.gl page only
-- [highlight.js 11](https://highlightjs.org/) + `atom-one-dark` theme — all pages, for code snippet syntax highlighting
+All dependencies are vendored locally in `lib/` — no internet connection or install step required.
+
+| File | Source |
+|---|---|
+| `lib/d3.v7.min.js` | [D3 v7](https://d3js.org/) — SVG page |
+| `lib/deck.gl.min.js` | [deck.gl](https://deck.gl/) standalone bundle — deck.gl page |
+| `lib/highlight.min.js` | [highlight.js 11.9.0](https://highlightjs.org/) — all pages |
+| `lib/hljs-glsl.min.js` | highlight.js GLSL language pack — WebGL page |
+| `lib/atom-one-dark.min.css` | highlight.js Atom One Dark theme — all pages |
