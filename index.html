@@ -91,14 +91,12 @@
   g.selectAll(".dot")
     .data(newData)
     .join(
-      // Entering dots — append a circle and grow from r=0
+      // Entering dots — append a circle at r=4
       enter => enter.append("circle")
         .attr("class", "dot")
         .attr("cx", d => xScale(d.x))
         .attr("cy", d => yScale(d.y))
-        .attr("r", 0)
-        .call(e => e.transition().duration(400)
-                    .ease(d3.easeCubicOut).attr("r", 4)),
+        .attr("r", 4),
 
       // Updating dots — animate to the new position
       update => update
@@ -106,10 +104,8 @@
         .attr("cx", d => xScale(d.x))
         .attr("cy", d => yScale(d.y)),
 
-      // Exiting dots — shrink and remove from the DOM
-      exit => exit
-        .transition().duration(300).ease(d3.easeCubicIn)
-        .attr("r", 0).remove()
+      // Exiting dots — remove immediately
+      exit => exit.remove()
     );
 }</code></pre>
   </div>
@@ -185,16 +181,12 @@
             .attr("class", "dot")
             .attr("cx", d => xScale(d.x))
             .attr("cy", d => yScale(d.y))
-            .attr("r", 0)
-            .call(e => e.transition().duration(400).ease(d3.easeCubicOut).attr("r", 4)),
+            .attr("r", 4),
           update => update
             .transition().duration(600).ease(d3.easeCubicInOut)
             .attr("cx", d => xScale(d.x))
             .attr("cy", d => yScale(d.y)),
-          exit => exit
-            .transition().duration(300).ease(d3.easeCubicIn)
-            .attr("r", 0)
-            .remove()
+          exit => exit.remove()
         );
     }
 

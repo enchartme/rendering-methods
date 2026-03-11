@@ -298,8 +298,6 @@ void main() {
     let particles = [];
 
     const ANIM_MS  = 600;
-    const ENTER_MS = 400;
-    const EXIT_MS  = 300;
 
     let animT     = 1;     // normalised 0→1; 1 = idle
     let animStart = 0;
@@ -307,8 +305,6 @@ void main() {
 
     // Easing
     function cubicInOut(t) { return t < 0.5 ? 4*t*t*t : 1 - (-2*t+2)**3/2; }
-    function cubicOut(t)   { return 1 - (1-t)**3; }
-    function cubicIn(t)    { return t*t*t; }
     function lerp(a, b, t) { return a + (b-a)*t; }
 
     // ── Hover ─────────────────────────────────────────────────────────────────
@@ -325,15 +321,7 @@ void main() {
       const px = margin.left + dx * plotW;
       const py = margin.top  + (1 - dy) * plotH;
 
-      let r;
-      if (p.phase === 'entering') {
-        r = 4 * cubicOut(Math.min(1, animT * ANIM_MS / ENTER_MS));
-      } else if (p.phase === 'exiting') {
-        r = 4 * (1 - cubicIn(Math.min(1, animT * ANIM_MS / EXIT_MS)));
-      } else {
-        r = 4;
-      }
-      return { dx, dy, px, py, r };
+      return { dx, dy, px, py, r: 4 };
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -353,10 +341,8 @@ void main() {
         posArr[i*2+1] = dy;
         sizeArr[i]    = r * dpr;  // gl_PointSize is physical px, not CSS px
 
-        if (particles[i].phase !== 'exiting') {
-          const d2 = (px - mouseX)**2 + (py - mouseY)**2;
+        const d2 = (px - mouseX)**2 + (py - mouseY)**2;
           if (d2 < minDist2) { minDist2 = d2; hoveredIdx = i; }
-        }
       }
 
       for (let i = 0; i < count; i++) {
@@ -402,8 +388,7 @@ void main() {
         rafId = requestAnimationFrame(tick);
       } else {
         animT = 1;
-        // Settle: remove exit particles, snap remaining to final positions
-        particles = particles.filter(p => p.phase !== 'exiting');
+        // Settle: snap all particles to final positions
         for (const p of particles) {
           p.fromDX = p.toDX;
           p.fromDY = p.toDY;
@@ -435,36 +420,27 @@ void main() {
         }
       }
 
-      const active = particles.filter(p => p.phase !== 'exiting');
-      const keep   = Math.min(active.length, newData.length);
-      const next   = [];
+      const keep = Math.min(particles.length, newData.length);
+      const next  = [];
 
       // Update — animate existing dots to new positions
       for (let i = 0; i < keep; i++) {
         next.push({
           phase: 'active',
-          fromDX: active[i].fromDX, fromDY: active[i].fromDY,
-          toDX:   newData[i].x,     toDY:   newData[i].y,
+          fromDX: particles[i].fromDX, fromDY: particles[i].fromDY,
+          toDX:   newData[i].x,        toDY:   newData[i].y,
         });
       }
 
-      // Enter — new dots grow from r=0 at their target position
+      // Enter — place new dots at their target position immediately
       for (let i = keep; i < newData.length; i++) {
         next.push({
-          phase: 'entering',
+          phase: 'active',
           fromDX: newData[i].x, fromDY: newData[i].y,
           toDX:   newData[i].x, toDY:   newData[i].y,
         });
       }
-
-      // Exit — removed dots shrink in place
-      for (let i = keep; i < active.length; i++) {
-        next.push({
-          phase: 'exiting',
-          fromDX: active[i].fromDX, fromDY: active[i].fromDY,
-          toDX:   active[i].toDX,   toDY:   active[i].toDY,
-        });
-      }
+      // Exit — removed dots are dropped immediately
 
       particles = next;
       allocArrays(particles.length);
@@ -498,7 +474,6 @@ void main() {
         cancelAnimationFrame(rafId);
         rafId  = null;
         animT  = 1;
-        particles = particles.filter(p => p.phase !== 'exiting');
         for (const p of particles) {
           p.fromDX = p.toDX;
           p.fromDY = p.toDY;
