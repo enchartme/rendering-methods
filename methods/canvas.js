@@ -152,7 +152,7 @@ function drawDots() {
       ctx.arc(cx, cy, r, 0, Math.PI * 2);
 
       if (isHovered) {
-        ctx.fillStyle   = '#e678e9';
+        ctx.fillStyle   = '#e5ffff';
         ctx.strokeStyle = '#0a0032';
         ctx.lineWidth   = 0.5;
         } else {

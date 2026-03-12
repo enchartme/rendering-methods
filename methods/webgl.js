@@ -50,18 +50,18 @@ const FS_SOURCE = `
     float d     = length(coord);
 
     // Discard fragments outside the circle; soft anti-aliased edge
-    float alpha = 1.0 - smoothstep(0.42, 0.5, d);
+    float alpha = 1.0 - smoothstep(0.46, 0.5, d);
     if (alpha < 0.001) discard;
 
-    // otter shine gold (70% opacity) ↔ otter play pink (100% opacity)
+    // otter shine gold (70% opacity) ↔ otter think bright (100% opacity)
     vec3  blue  = vec3(0.957, 0.745, 0.000);
-    vec3  pink  = vec3(0.902, 0.471, 0.914);
+    vec3  pink  = vec3(0.898, 1.000, 1.000);
     vec3  color = mix(blue, pink, v_hover);
-    float baseA = mix(0.7, 1.0, v_hover);
+    float baseA = mix(0.9, 1.0, v_hover);
 
     // Stroke ring: otter sleep night near the circle edge
     vec3  stroke = vec3(0.039, 0.000, 0.196);  // #0a0032
-    color = mix(color, stroke, smoothstep(0.34, 0.39, d));
+    color = mix(color, stroke, smoothstep(0.38, 0.44, d));
 
     gl_FragColor = vec4(color, baseA * alpha);
   }
@@ -215,7 +215,7 @@ function getRendered(p) {
   const px = margin.left + dx * plotW;
   const py = margin.top  + (1 - dy) * plotH;
 
-  return { dx, dy, px, py, r: 4 };
+  return { dx, dy, px, py, r: 5 };
 }
 
 // ════════════════════════════════════════════════════════════════════════

@@ -81,7 +81,7 @@
     radiusUnits: 'pixels',
 
     getFillColor: d => d.id === hoveredId
-      ? [230, 120, 233, 255]   // otter play pink
+      ? [229, 255, 255, 255]   // otter think bright
       : [244, 190,   0, 178],  // otter shine gold @ 70%
 
     pickable: true,
@@ -118,7 +118,7 @@ new Deck({
 
 // Accessor re-runs per datum on every re-render
 getFillColor: d => d.id === hoveredId
-  ? [230, 120, 233, 255]  // otter play pink
+  ? [229, 255, 255, 255]  // otter think bright
   : [244, 190,   0, 178], // otter shine gold @ 70%
 
 // Declare dependency so deck.gl re-evaluates getFillColor on hover change

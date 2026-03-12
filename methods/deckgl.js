@@ -115,9 +115,9 @@ function buildLayer() {
     getRadius: d => d.targetR,
     radiusUnits: 'pixels',
 
-    // otter swim blue (70% opacity) or otter play pink on hover
+    // otter shine gold (70% opacity) or otter think bright on hover
     getFillColor: d => d.id === hoveredId
-      ? [230, 120, 233, 255]
+      ? [229, 255, 255, 255]
       : [244, 190, 0, 178],
 
     stroked: true,
@@ -199,7 +199,7 @@ function transition(newPoints) {
       ...oldParticles[i],
       dx: newPoints[i].x,
       dy: newPoints[i].y,
-      targetR: 4,
+      targetR: 4.5,
     });
   }
 
@@ -209,7 +209,7 @@ function transition(newPoints) {
       id: nextId++,
       dx: newPoints[i].x,
       dy: newPoints[i].y,
-      targetR: 4,
+      targetR: 4.5,
     });
   }
 

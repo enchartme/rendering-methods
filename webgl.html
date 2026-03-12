@@ -95,17 +95,17 @@ void main() {
 // Fragment shader — runs once per pixel, clips to circle + hover tint
 void main() {
   float d     = length(gl_PointCoord - vec2(0.5));
-  float alpha = 1.0 - smoothstep(0.42, 0.5, d);  // soft AA edge
+  float alpha = 1.0 - smoothstep(0.46, 0.5, d);  // soft AA edge
   if (alpha &lt; 0.001) discard;                    // clip corners to circle
 
   vec3 color = mix(
     vec3(0.957, 0.745, 0.000),  // otter shine gold
-    vec3(0.902, 0.471, 0.914),  // otter play pink
+    vec3(0.898, 1.000, 1.000),  // otter think bright
     v_hover
   );
   // stroke ring: otter sleep night near the edge
-  color = mix(color, vec3(0.039, 0.000, 0.196), smoothstep(0.34, 0.39, d));
-  gl_FragColor = vec4(color, mix(0.7, 1.0, v_hover) * alpha);
+  color = mix(color, vec3(0.039, 0.000, 0.196), smoothstep(0.38, 0.44, d));
+  gl_FragColor = vec4(color, mix(0.9, 1.0, v_hover) * alpha);
 }</code></pre>
   </div>
 
@@ -116,7 +116,7 @@ void main() {
       a nearest-neighbour loop each frame writes a <code>0.0</code> or <code>1.0</code> flag per
       point into a typed array. That array is uploaded as a per-vertex attribute
       (<code>a_hover</code>) and the fragment shader uses <code>mix()</code> to blend
-      otter shine gold &rarr; otter play pink without branching.
+      otter shine gold &rarr; otter think bright without branching.
     </p>
     <pre><code class="language-javascript">// CPU: nearest-neighbour search, result stored in hoverArr
 for (let i = 0; i &lt; count; i++) {
@@ -130,9 +130,9 @@ for (let i = 0; i &lt; count; i++)
 gl.bufferData(gl.ARRAY_BUFFER, hoverArr, gl.DYNAMIC_DRAW);</code></pre>
     <pre><code class="language-glsl">// Fragment shader: GPU blends color based on the v_hover varying
 vec3  blue  = vec3(0.957, 0.745, 0.000); // otter shine gold
-vec3  pink  = vec3(0.902, 0.471, 0.914); // otter play pink
+vec3  pink  = vec3(0.898, 1.000, 1.000); // otter think bright
 vec3  color = mix(blue, pink, v_hover);  // 0.0 = blue, 1.0 = pink
-float baseA = mix(0.7, 1.0, v_hover);
+float baseA = mix(0.9, 1.0, v_hover);
 gl_FragColor = vec4(color, baseA * alpha);</code></pre>
   </div>
 
