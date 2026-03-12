@@ -115,10 +115,10 @@ function buildLayer() {
     getRadius: d => d.targetR,
     radiusUnits: 'pixels',
 
-    // steelblue (70% opacity) or hotpink on hover
+    // otter swim blue (70% opacity) or otter play pink on hover
     getFillColor: d => d.id === hoveredId
-      ? [255, 105, 180, 255]
-      : [70, 130, 180, 178],
+      ? [230, 120, 233, 255]
+      : [92, 84, 248, 178],
 
     // Line width 0 (no stroke)
     stroked: false,

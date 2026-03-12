@@ -89,12 +89,12 @@
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
 
         if (isHovered) {
-        ctx.fillStyle   = 'hotpink';
-        ctx.strokeStyle = 'hotpink';
+        ctx.fillStyle   = '#e678e9';
+        ctx.strokeStyle = '#e678e9';
         ctx.lineWidth   = 0.5;
         } else {
-        ctx.fillStyle   = 'rgba(70,130,180,0.7)'; // steelblue @ 70%
-        ctx.strokeStyle = '#1a6496';
+        ctx.fillStyle   = 'rgba(92,84,248,0.7)'; // otter swim blue @ 70%
+        ctx.strokeStyle = '#3229f7';
         ctx.lineWidth   = 0.5;
         }
 
@@ -136,7 +136,7 @@ for (let i = 0; i &lt; particles.length; i++) {
 }
 
 // 3. Color branch — hovered dot is drawn on top in the second pass
-ctx.fillStyle = isHovered ? 'hotpink' : 'rgba(70,130,180,0.7)';</code></pre>
+ctx.fillStyle = isHovered ? '#e678e9' : 'rgba(92,84,248,0.7)';</code></pre>
   </div>
 
   <p class="github-link">See the <a href="https://github.com/enchartme/rendering-methods/blob/main/methods/canvas.js">complete implementation</a> on GitHub (269 lines)</p>

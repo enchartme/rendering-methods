@@ -53,9 +53,9 @@ const FS_SOURCE = `
     float alpha = 1.0 - smoothstep(0.42, 0.5, d);
     if (alpha < 0.001) discard;
 
-    // steelblue (70% opacity) ↔ hotpink (100% opacity)
-    vec3  blue  = vec3(0.275, 0.510, 0.706);
-    vec3  pink  = vec3(1.000, 0.412, 0.706);
+    // otter swim blue (70% opacity) ↔ otter play pink (100% opacity)
+    vec3  blue  = vec3(0.361, 0.329, 0.973);
+    vec3  pink  = vec3(0.902, 0.471, 0.914);
     vec3  color = mix(blue, pink, v_hover);
     float baseA = mix(0.7, 1.0, v_hover);
 

@@ -81,8 +81,8 @@
     radiusUnits: 'pixels',
 
     getFillColor: d => d.id === hoveredId
-      ? [255, 105, 180, 255]   // hotpink
-      : [70,  130, 180, 178],  // steelblue @ 70%
+      ? [230, 120, 233, 255]   // otter play pink
+      : [92,  84,  248, 178],  // otter swim blue @ 70%
 
     pickable: true,
 
@@ -118,8 +118,8 @@ new Deck({
 
 // Accessor re-runs per datum on every re-render
 getFillColor: d => d.id === hoveredId
-  ? [255, 105, 180, 255]  // hotpink
-  : [70,  130, 180, 178], // steelblue @ 70%
+  ? [230, 120, 233, 255]  // otter play pink
+  : [92,  84,  248, 178], // otter swim blue @ 70%
 
 // Declare dependency so deck.gl re-evaluates getFillColor on hover change
 updateTriggers: { getFillColor: [hoveredId] }</code></pre>

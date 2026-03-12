@@ -152,12 +152,12 @@ function drawDots() {
       ctx.arc(cx, cy, r, 0, Math.PI * 2);
 
       if (isHovered) {
-        ctx.fillStyle   = 'hotpink';
-        ctx.strokeStyle = 'hotpink';
+        ctx.fillStyle   = '#e678e9';
+        ctx.strokeStyle = '#e678e9';
         ctx.lineWidth   = 0.5;
       } else {
-        ctx.fillStyle   = 'rgba(70,130,180,0.7)'; // steelblue @ 70%
-        ctx.strokeStyle = '#1a6496';
+        ctx.fillStyle   = 'rgba(92,84,248,0.7)'; // otter swim blue @ 70%
+        ctx.strokeStyle = '#3229f7';
         ctx.lineWidth   = 0.5;
       }
 
