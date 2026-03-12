@@ -4,6 +4,14 @@
    live in each page's own inline <style> block.
    ============================================================ */
 
+@font-face {
+  font-family: 'Arima';
+  src: url('../lib/arima.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -37,7 +45,9 @@ body {
 h1 {
   margin-bottom: 0;
   font-size: 1.2rem;
-  color: #e5ffff;
+  font-weight: 700;
+  font-family: 'Arima', sans-serif;
+  color: #f4be00;
   white-space: nowrap;
 }
 
@@ -60,9 +70,9 @@ h1 a:hover {
 .page-nav a {
   padding: 0.3rem 0.7rem;
   font-size: 0.85rem;
-  border: 1.5px solid #6868a0;
+  border: 1.5px solid #e5ffff;
   border-radius: 4px;
-  color: #b8b8d8;
+  color: #e5ffff;
   text-decoration: none;
   transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
@@ -112,10 +122,10 @@ h1 a:hover {
 .btn {
   padding: 0.35rem 0.9rem;
   font-size: 0.85rem;
-  border: 1.5px solid #6868a0;
+  border: 1.5px solid #e5ffff;
   border-radius: 4px;
   background: #2d2d52;
-  color: #b8b8d8;
+  color: #e5ffff;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
