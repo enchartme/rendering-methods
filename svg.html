@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SVG / D3 — Rendering Methods</title>
+  <script src="lib/d3.v7.min.js"></script>
+  <link rel="stylesheet" href="lib/atom-one-dark.min.css">
+  <script src="lib/highlight.min.js"></script>
+  <link rel="stylesheet" href="helpers/shared.css">
+  <style>
+    #scatterplot {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .axis text {
+      font-size: 11px;
+      fill: #555;
+    }
+
+    .axis line,
+    .axis path {
+      stroke: #bbb;
+    }
+
+    .axis-label {
+      font-size: 12px;
+      fill: #444;
+    }
+
+    .dot {
+      fill: steelblue;
+      fill-opacity: 0.7;
+      stroke: #1a6496;
+      stroke-width: 0.5;
+      cursor: default;
+      transition: fill 0.15s;
+    }
+
+    .dot:hover {
+      fill: hotpink;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-layout">
+  <div class="left-col">
+
+  <header class="page-header">
+    <h1><a href="index.html">← back to overview</a></h1>
+    <nav class="page-nav">
+      <a href="svg.html" class="current">SVG</a>
+      <a href="canvas.html">Canvas</a>
+      <a href="webgl.html">WebGL</a>
+      <a href="deckgl.html">deck.gl</a>
+    </nav>
+  </header>
+
+  <div class="controls">
+    <div class="controls-group">
+      <span>Distribution:</span>
+      <button class="btn"        id="btn-uniform">Uniform</button>
+      <button class="btn active" id="btn-normal" >Normal</button>
+    </div>
+    <div class="controls-group">
+      <span>Points:</span>
+      <button class="btn" id="btn-div10">&divide;10</button>
+      <span id="n-display" style="font-size:0.85rem;color:#444;min-width:3.5rem;text-align:center;">1 000</span>
+      <button class="btn" id="btn-mul10">&times;10</button>
+    </div>
+  </div>
+
+  <div class="chart-container">
+    <svg id="scatterplot"></svg>
+  </div>
+
+  </div><!-- /.left-col -->
+  <div class="right-col">
+
+  <div class="code-panel">
+    <p class="code-panel-label">Key concept &mdash; D3 data join in <code>updateDots()</code></p>
+    <p class="code-panel-explainer">
+      D3's <strong>data join</strong> is the central idea: you bind an array of data to a selection of DOM
+      elements and D3 computes which elements are <em>new</em> (enter), <em>changed</em> (update), or
+      <em>removed</em> (exit). Each case is handled declaratively &mdash; you describe what the element
+      <em>should look like</em>, and D3 + SVG take care of rendering. Because every dot is a real
+      <code>&lt;circle&gt;</code> in the DOM, the browser handles hit-testing and CSS transitions for free,
+      but performance degrades fast once you have tens of thousands of elements.
+    </p>
+    <pre><code class="language-javascript">function updateDots(newData) {
+  g.selectAll(".dot")
+    .data(newData)
+    .join(
+      // Entering dots — append a circle at r=4
+      enter => enter.append("circle")
+        .attr("class", "dot")
+        .attr("cx", d => xScale(d.x))
+        .attr("cy", d => yScale(d.y))
+        .attr("r", 4),
+
+      // Updating dots — animate to the new position
+      update => update
+        .transition().duration(600).ease(d3.easeCubicInOut)
+        .attr("cx", d => xScale(d.x))
+        .attr("cy", d => yScale(d.y)),
+
+      // Exiting dots — remove immediately
+      exit => exit.remove()
+    );
+}</code></pre>
+  </div>
+
+  <div class="code-panel">
+    <p class="code-panel-label">Hover &amp; color</p>
+    <p class="code-panel-explainer">
+      Every <code>&lt;circle&gt;</code> is a real DOM node, so the browser's CSS engine handles
+      <code>:hover</code> intrinsically &mdash; no JavaScript, no hit-testing, no manual repaints.
+      A <code>transition: fill 0.15s</code> rule gives the smooth color change for free. This is
+      one of SVG's biggest ergonomic advantages over canvas-based renderers.
+    </p>
+    <pre><code class="language-css">/* SVG circles are DOM nodes — CSS :hover works out of the box */
+.dot {
+  fill: steelblue;
+  transition: fill 0.15s;
+}
+
+.dot:hover {
+  fill: hotpink;
+}</code></pre>
+  </div>
+
+  <p class="github-link">See the <a href="https://github.com/enchartme/rendering-methods/blob/main/methods/svg.js">complete implementation</a> on GitHub (75 lines)</p>
+
+  </div><!-- /.right-col -->
+  </div><!-- /.page-layout -->
+
+  <script src="helpers/data.js"></script>
+  <script src="helpers/controls.js"></script>
+  <script src="methods/svg.js"></script>
+  <script>
+    hljs.highlightAll();
+  </script>
+</body>
+</html>

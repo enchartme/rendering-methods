@@ -1,0 +1,269 @@
+// ── Canvas / layout setup ─────────────────────────────────────────────────
+const canvas = document.getElementById('scatterplot');
+const ctx    = canvas.getContext('2d');
+const dpr    = window.devicePixelRatio || 1;
+
+const margin = { top: 20, right: 20, bottom: 50, left: 55 };
+let CSS_W, CSS_H, plotW, plotH;
+
+// data-space (0-1) → pixel (uses current plotW/plotH)
+function xPx(v) { return margin.left + v * plotW; }
+function yPx(v) { return margin.top  + (1 - v) * plotH; }
+
+// ── Canvas resize ─────────────────────────────────────────────────────────
+function resizeCanvas() {
+  CSS_W = canvas.clientWidth;
+  CSS_H = canvas.clientHeight;
+  plotW = CSS_W - margin.left - margin.right;
+  plotH = CSS_H - margin.top  - margin.bottom;
+
+  canvas.width  = CSS_W * dpr;
+  canvas.height = CSS_H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // reproject live particles to the new coordinate space
+  if (particles.length) {
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    animT = 1;
+    for (const p of particles) {
+      const cx = xPx(p.dx), cy = yPx(p.dy);
+      p.fromCx = cx; p.toCx = cx;
+      p.fromCy = cy; p.toCy = cy;
+      p.phase  = 'active';
+    }
+    render();
+  }
+}
+
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(resizeCanvas, 40);
+});
+
+// ── Easing helpers ────────────────────────────────────────────────────────
+function cubicInOut(t) { return t < 0.5 ? 4*t*t*t : 1 - (-2*t+2)**3/2; }
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+// ── Particle model ────────────────────────────────────────────────────────
+// Each particle: { fromCx, fromCy, fromR, toCx, toCy, toR, phase }
+//   phase: 'active'
+let particles = [];
+
+const ANIM_MS  = 600; // position animation
+
+let animT     = 1;   // normalised progress 0-1; 1 = idle
+let animStart = 0;
+let rafId     = null;
+
+// ── Hover ─────────────────────────────────────────────────────────────────
+let mouseX = -Infinity, mouseY = -Infinity;
+let hoveredIdx = -1;
+const HOVER_PX = 20; // max pixel distance to count as hovered
+
+// ── Compute current rendered position of a particle ───────────────────────
+function getRendered(p) {
+  const tPos = cubicInOut(Math.min(1, animT));
+  const cx = lerp(p.fromCx, p.toCx, tPos);
+  const cy = lerp(p.fromCy, p.toCy, tPos);
+
+  return { cx, cy, r: 4 };
+}
+
+// ── Axes ──────────────────────────────────────────────────────────────────
+const TICKS = [0, 0.2, 0.4, 0.6, 0.8, 1.0];
+
+function drawAxes() {
+  ctx.save();
+
+  // grid lines
+  ctx.strokeStyle = '#e8e8e8';
+  ctx.lineWidth = 1;
+  for (const v of TICKS) {
+    // vertical
+    ctx.beginPath();
+    ctx.moveTo(xPx(v), margin.top);
+    ctx.lineTo(xPx(v), margin.top + plotH);
+    ctx.stroke();
+    // horizontal
+    ctx.beginPath();
+    ctx.moveTo(margin.left,         yPx(v));
+    ctx.lineTo(margin.left + plotW, yPx(v));
+    ctx.stroke();
+  }
+
+  // tick labels
+  ctx.fillStyle    = '#555';
+  ctx.font         = '11px sans-serif';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'top';
+  for (const v of TICKS) {
+    ctx.fillText(v.toFixed(1), xPx(v), margin.top + plotH + 6);
+  }
+
+  ctx.textAlign    = 'right';
+  ctx.textBaseline = 'middle';
+  for (const v of TICKS) {
+    ctx.fillText(v.toFixed(1), margin.left - 7, yPx(v));
+  }
+
+  // axis labels
+  ctx.fillStyle    = '#444';
+  ctx.font         = '12px sans-serif';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('X', margin.left + plotW / 2, CSS_H - 4);
+
+  ctx.save();
+  ctx.translate(13, margin.top + plotH / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('Y', 0, 0);
+  ctx.restore();
+
+  ctx.restore();
+}
+
+// ── Dots + nearest-neighbour hover ────────────────────────────────────────
+function drawDots() {
+  // compute current positions for all particles
+  const rendered = particles.map(p => getRendered(p));
+
+  // find nearest dot to the cursor
+  let minDist2 = HOVER_PX * HOVER_PX;
+  hoveredIdx = -1;
+  for (let i = 0; i < particles.length; i++) {
+    const { cx, cy } = rendered[i];
+    const d2 = (cx - mouseX) ** 2 + (cy - mouseY) ** 2;
+    if (d2 < minDist2) { minDist2 = d2; hoveredIdx = i; }
+  }
+
+  // draw — hovered dot last so it isn't obscured
+  for (let pass = 0; pass < 2; pass++) {
+    for (let i = 0; i < particles.length; i++) {
+      const isHovered = i === hoveredIdx;
+      if (pass === 0 && isHovered)  continue; // draw normal dots first
+      if (pass === 1 && !isHovered) continue; // draw hovered dot on top
+
+      const { cx, cy, r } = rendered[i];
+      if (r <= 0) continue;
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+
+      if (isHovered) {
+        ctx.fillStyle   = 'hotpink';
+        ctx.strokeStyle = 'hotpink';
+        ctx.lineWidth   = 0.5;
+      } else {
+        ctx.fillStyle   = 'rgba(70,130,180,0.7)'; // steelblue @ 70%
+        ctx.strokeStyle = '#1a6496';
+        ctx.lineWidth   = 0.5;
+      }
+
+      ctx.fill();
+      ctx.stroke();
+    }
+  }
+}
+
+// ── Full render frame ─────────────────────────────────────────────────────
+function render() {
+  ctx.clearRect(0, 0, CSS_W, CSS_H);
+  drawAxes();
+  drawDots();
+}
+
+// ── Animation loop ────────────────────────────────────────────────────────
+function tick(ts) {
+  animT = (ts - animStart) / ANIM_MS;
+
+  if (animT < 1) {
+    render();
+    rafId = requestAnimationFrame(tick);
+  } else {
+    animT = 1;
+    // snap all particles to their final positions
+    for (const p of particles) {
+      p.fromCx = p.toCx;
+      p.fromCy = p.toCy;
+      p.fromR  = p.toR;
+      p.phase  = 'active';
+    }
+    render();
+    rafId = null;
+  }
+}
+
+function startAnim() {
+  if (rafId) cancelAnimationFrame(rafId);
+  animStart = performance.now();
+  animT = 0;
+  rafId = requestAnimationFrame(tick);
+}
+
+// ── Transition to new data ────────────────────────────────────────────────
+function transition(newData) {
+  // snap any in-progress animation to its current interpolated position
+  if (animT < 1) {
+    const tPos = cubicInOut(animT);
+    for (const p of particles) {
+      p.fromCx = lerp(p.fromCx, p.toCx, tPos);
+      p.fromCy = lerp(p.fromCy, p.toCy, tPos);
+    }
+  }
+
+  const keep = Math.min(particles.length, newData.length);
+  const next  = [];
+
+  // update kept dots → animate to new position
+  for (let i = 0; i < keep; i++) {
+    next.push({
+      dx: newData[i].x, dy: newData[i].y,
+      fromCx: particles[i].fromCx, fromCy: particles[i].fromCy, fromR: 4,
+      toCx:   xPx(newData[i].x), toCy: yPx(newData[i].y), toR: 4,
+      phase: 'active',
+    });
+  }
+
+  // enter new dots → place at their target position immediately
+  for (let i = keep; i < newData.length; i++) {
+    const cx = xPx(newData[i].x), cy = yPx(newData[i].y);
+    next.push({
+      dx: newData[i].x, dy: newData[i].y,
+      fromCx: cx, fromCy: cy, fromR: 4,
+      toCx:   cx, toCy:   cy, toR:   4,
+      phase: 'active',
+    });
+  }
+  // exit removed dots → drop immediately (no exit animation)
+
+  particles = next;
+  startAnim();
+}
+
+// ── Initial draw ──────────────────────────────────────────────────────────
+resizeCanvas(); // sets CSS_W/H/plotW/plotH and sizes the canvas element
+const initData = generateNormal(1000);
+particles = initData.map(d => ({
+  dx: d.x, dy: d.y,
+  fromCx: xPx(d.x), fromCy: yPx(d.y), fromR: 4,
+  toCx:   xPx(d.x), toCy:   yPx(d.y), toR:   4,
+  phase: 'active',
+}));
+render();
+
+// ── Mouse events ──────────────────────────────────────────────────────────
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = e.clientX - rect.left;
+  mouseY = e.clientY - rect.top;
+  if (!rafId) render(); // refresh hover when not animating
+});
+
+canvas.addEventListener('mouseleave', () => {
+  mouseX = -Infinity; mouseY = -Infinity; hoveredIdx = -1;
+  if (!rafId) render();
+});
+
+initControls({ onRender: transition });

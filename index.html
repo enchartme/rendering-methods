@@ -3,214 +3,305 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rendering Methods Comparison</title>
-  <script src="lib/d3.v7.min.js"></script>
-  <link rel="stylesheet" href="lib/atom-one-dark.min.css">
-  <script src="lib/highlight.min.js"></script>
-  <link rel="stylesheet" href="shared.css">
+  <title>Millions of Points: Rendering Methods for Performant Datavis</title>
+
+  <!-- SEO -->
+  <meta name="description" content="Compare SVG, Canvas 2D, WebGL, and deck.gl for rendering large scatter plots in the browser. Live interactive demos, code examples, and a performance breakdown by Angie Hjort." />
+  <meta name="author" content="Angie Hjort" />
+  <meta name="keywords" content="data visualisation, rendering performance, WebGL, Canvas 2D, SVG, D3, deck.gl, scatter plot, datavis, browser rendering" />
+  <link rel="canonical" href="https://enchartme.github.io/rendering-methods/" />
+
+  <!-- Open Graph (Facebook, LinkedIn, Slack, iMessage…) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Millions of Points: Rendering Methods for Performant Datavis" />
+  <meta property="og:description" content="Compare SVG, Canvas 2D, WebGL, and deck.gl for rendering large scatter plots. Live demos, code walkthroughs, and a side-by-side performance table." />
+  <meta property="og:url" content="https://enchartme.github.io/rendering-methods/" />
+  <meta property="og:site_name" content="Rendering Methods — Encharted Media" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- Twitter / X card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Millions of Points: Rendering Methods for Performant Datavis" />
+  <meta name="twitter:description" content="Compare SVG, Canvas 2D, WebGL, and deck.gl for rendering large scatter plots. Live demos, code walkthroughs, and a side-by-side performance table." />
+  <meta name="twitter:creator" content="@enchartme" />
+
+  <link rel="stylesheet" href="helpers/shared.css">
   <style>
-    #scatterplot {
+    @media (min-width: 1025px) {
+      body {
+        height: auto;
+        overflow: visible;
+      }
+    }
+
+    .overview-wrap {
+      width: 100%;
+    }
+
+    .overview-header {
+      text-align: center;
+      margin-bottom: 2rem;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .overview-header h1 {
+      font-size: clamp(1.25rem, 4vw, 2rem);
+      color: #222;
+      margin-bottom: 0.25rem;
+      white-space: normal;
+    }
+
+    .overview-header .author {
+      font-size: 0.88rem;
+      color: #999;
+      margin-bottom: 1.5rem;
+    }
+
+    .overview-header .page-nav {
+      justify-content: center;
+    }
+
+    .intro {
+      font-size: 1rem;
+      line-height: 1.75;
+      color: #444;
+      max-width: 72ch;
+      margin: 0 auto 2.5rem;
+    }
+
+    .comparison-table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 3rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.11);
+    }
+
+    .comparison-table {
+      width: 100%;
+      min-width: 600px;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 0;
+      font-size: 0.87rem;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+      padding: 0.7rem 1rem;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+
+    .comparison-table thead th {
+      background: #f0f4f8;
+      font-size: 0.88rem;
+      color: #333;
+      font-weight: 700;
+      border-bottom: 2px solid #dde3ea;
+    }
+
+    .comparison-table thead th a {
+      color: steelblue;
+      text-decoration: none;
+    }
+
+    .comparison-table thead th a:hover {
+      text-decoration: underline;
+    }
+
+    .comparison-table td:first-child {
+      text-align: left;
+      font-weight: 500;
+      color: #555;
+      background: #fafafa;
+      white-space: nowrap;
+    }
+
+    .comparison-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.18em 0.5em;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .badge-green  { background: #d4f5d4; color: #1a6b1a; }
+    .badge-yellow { background: #fff3cd; color: #7d5a00; }
+    .badge-red    { background: #ffe0e0; color: #a02020; }
+    .badge-blue   { background: #dbeafe; color: #1e40af; }
+    .muted        { color: #aaa; font-size: 0.8rem; }
+
+    .video-section {
+      text-align: center;
+      margin-bottom: 2rem;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .video-section h2 {
+      font-size: 1.05rem;
+      color: #444;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .video-wrapper {
+      display: inline-block;
+      box-shadow: 0 3px 16px rgba(0,0,0,0.18);
+      border-radius: 8px;
+      overflow: hidden;
+      width: 100%;
+      max-width: 560px;
+    }
+
+    .video-wrapper iframe {
       display: block;
       width: 100%;
-      height: 100%;
-    }
-
-    .axis text {
-      font-size: 11px;
-      fill: #555;
-    }
-
-    .axis line,
-    .axis path {
-      stroke: #bbb;
-    }
-
-    .axis-label {
-      font-size: 12px;
-      fill: #444;
-    }
-
-    .dot {
-      fill: steelblue;
-      fill-opacity: 0.7;
-      stroke: #1a6496;
-      stroke-width: 0.5;
-      cursor: default;
-      transition: fill 0.15s;
-    }
-
-    .dot:hover {
-      fill: hotpink;
+      height: auto;
+      aspect-ratio: 16 / 9;
     }
   </style>
 </head>
 <body>
 
-  <div class="page-layout">
-  <div class="left-col">
+  <div class="overview-wrap">
 
-  <header class="page-header">
-    <h1>Rendering Methods</h1>
-    <nav class="page-nav">
-      <a href="index.html" class="current">SVG</a>
-      <a href="canvas.html">Canvas</a>
-      <a href="webgl.html">WebGL</a>
-      <a href="deckgl.html">deck.gl</a>
-    </nav>
-  </header>
+    <header class="overview-header">
+      <h1>Millions of Points: Rendering Methods for Performant Datavis</h1>
+      <p class="author">
+        Angie Hjort, <a href="https://enchart.me/" target="_blank">Encharted Media AB</a><br/>
+        Johnnie Hård, <a href="https://synvinkel.org/" target="_blank">Synvinkel Aktiebolag</a>
+      </p>
+      <p class="author"></p>
+      <nav class="page-nav">
+        <a href="svg.html">SVG</a>
+        <a href="canvas.html">Canvas</a>
+        <a href="webgl.html">WebGL</a>
+        <a href="deckgl.html">deck.gl</a>
+      </nav>
+    </header>
 
-  <div class="controls">
-    <span>Distribution:</span>
-    <button class="btn"        id="btn-uniform">Uniform</button>
-    <button class="btn active" id="btn-normal" >Normal</button>
-    <div class="controls-sep"></div>
-    <span>Points:</span>
-    <button class="btn" id="btn-div10">&divide;10</button>
-    <span id="n-display" style="font-size:0.85rem;color:#444;min-width:3.5rem;text-align:center;">1 000</span>
-    <button class="btn" id="btn-mul10">&times;10</button>
-  </div>
-
-  <div class="chart-container">
-    <svg id="scatterplot"></svg>
-  </div>
-
-  </div><!-- /.left-col -->
-  <div class="right-col">
-
-  <div class="code-panel">
-    <p class="code-panel-label">Key concept &mdash; D3 data join in <code>updateDots()</code></p>
-    <p class="code-panel-explainer">
-      D3’s <strong>data join</strong> is the central idea: you bind an array of data to a selection of DOM
-      elements and D3 computes which elements are <em>new</em> (enter), <em>changed</em> (update), or
-      <em>removed</em> (exit). Each case is handled declaratively &mdash; you describe what the element
-      <em>should look like</em>, and D3 + SVG take care of rendering. Because every dot is a real
-      <code>&lt;circle&gt;</code> in the DOM, the browser handles hit-testing and CSS transitions for free,
-      but performance degrades fast once you have tens of thousands of elements.
+    <p class="intro">
+      You know that friend who solves <em>everything</em> in Excel? That's SVG &mdash; elegant,
+      approachable, and completely helpless the moment you hand it a million rows. 💀
+      Browsers have <strong>three</strong> fundamental ways to draw pixels: <strong>SVG</strong>
+      (a retained-mode DOM of shapes), <strong>Canvas 2D</strong> (an immediate-mode CPU drawing
+      API), and <strong>WebGL</strong> (raw GPU access via shaders). Everything else is an
+      abstraction layer on top of those: D3 wraps SVG, while deck.gl &mdash; and similar
+      libraries like Three.js or regl &mdash; wrap WebGL into a friendlier API. Each layer trades
+      some <strong>raw performance</strong> for <strong>ease of use</strong>. Pick the wrong one
+      and your laptop fan will let you know. This page is your cheat sheet.
     </p>
-    <pre><code class="language-javascript">function updateDots(newData) {
-  g.selectAll(".dot")
-    .data(newData)
-    .join(
-      // Entering dots — append a circle at r=4
-      enter => enter.append("circle")
-        .attr("class", "dot")
-        .attr("cx", d => xScale(d.x))
-        .attr("cy", d => yScale(d.y))
-        .attr("r", 4),
 
-      // Updating dots — animate to the new position
-      update => update
-        .transition().duration(600).ease(d3.easeCubicInOut)
-        .attr("cx", d => xScale(d.x))
-        .attr("cy", d => yScale(d.y)),
+    <div class="comparison-table-wrap">
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th style="text-align:left;">Characteristic</th>
+          <th><a href="svg.html">SVG / D3</a></th>
+          <th><a href="canvas.html">Canvas 2D</a></th>
+          <th><a href="webgl.html">WebGL</a></th>
+          <th><a href="deckgl.html">deck.gl</a></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Sweet spot (points)</td>
+          <td>≤ 10 000</td>
+          <td>≤ 100 000</td>
+          <td>≤ 10 000 000</td>
+          <td>≤ 5 000 000</td>
+        </tr>
+        <tr>
+          <td>Learning threshold</td>
+          <td><span class="badge badge-green">Low</span></td>
+          <td><span class="badge badge-yellow">Medium</span></td>
+          <td><span class="badge badge-red">High</span></td>
+          <td><span class="badge badge-yellow">Medium</span></td>
+        </tr>
+        <tr>
+          <td>Memory usage</td>
+          <td><span class="badge badge-red">High</span> <span class="muted">(1 DOM node / point)</span></td>
+          <td><span class="badge badge-green">Low</span></td>
+          <td><span class="badge badge-green">Low</span></td>
+          <td><span class="badge badge-green">Low</span></td>
+        </tr>
+        <tr>
+          <td>CPU per frame</td>
+          <td><span class="badge badge-yellow">Medium</span> <span class="muted">(layout)</span></td>
+          <td><span class="badge badge-red">High</span> <span class="muted">(draw calls)</span></td>
+          <td><span class="badge badge-green">Low</span></td>
+          <td><span class="badge badge-green">Low</span></td>
+        </tr>
+        <tr>
+          <td>GPU usage</td>
+          <td><span class="muted">None</span></td>
+          <td><span class="muted">Blit only</span></td>
+          <td><span class="badge badge-blue">Full rasterisation</span></td>
+          <td><span class="badge badge-blue">Full rasterisation</span></td>
+        </tr>
+        <tr>
+          <td>Hover / hit-testing</td>
+          <td><span class="badge badge-green">Free (CSS)</span></td>
+          <td><span class="badge badge-red">Manual</span></td>
+          <td><span class="badge badge-yellow">Manual (GPU pick)</span></td>
+          <td><span class="badge badge-green">Built-in</span></td>
+        </tr>
+        <tr>
+          <td>Animations</td>
+          <td><span class="badge badge-green">CSS transitions</span></td>
+          <td><span class="badge badge-yellow">Manual rAF loop</span></td>
+          <td><span class="badge badge-red">Manual shaders</span></td>
+          <td><span class="badge badge-green">GPU transitions</span></td>
+        </tr>
+        <tr>
+          <td>Zoom &amp; pan</td>
+          <td>Via D3 zoom</td>
+          <td>Manual</td>
+          <td>Manual</td>
+          <td><span class="badge badge-green">Built-in</span></td>
+        </tr>
+        <tr>
+          <td>Code size (this demo)</td>
+          <td>75 lines</td>
+          <td>269 lines</td>
+          <td>407 lines</td>
+          <td>249 lines</td>
+        </tr>
+        <tr>
+          <td>Best for</td>
+          <td>Dashboards, small data</td>
+          <td>Custom drawing, games</td>
+          <td>Big data, science viz</td>
+          <td>Geospatial, big data</td>
+        </tr>
+      </tbody>
+    </table>
+    </div><!-- /.comparison-table-wrap -->
 
-      // Exiting dots — remove immediately
-      exit => exit.remove()
-    );
-}</code></pre>
-  </div>
+    <div class="video-section">
+      <h2>Full 1 hour lecture</h2>
+      <p style="margin-bottom:1rem;font-size:0.88rem;color:#777;">
+        <a href="./AngieHjort--Millions-of-Points--Rendering-Methods-for-Performant-Datavis.pdf" style="color:#4a7ab5;text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">📄 Lecture slides in PDF</a>
+      </p>
+      <div class="video-wrapper">
+        <iframe src="https://www.youtube.com/embed/JHJ3IGZzkk8?si=A1J1a9sqU1Gk6xwc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </div>
+    </div>
 
-  <div class="code-panel">
-    <p class="code-panel-label">Hover &amp; color</p>
-    <p class="code-panel-explainer">
-      Every <code>&lt;circle&gt;</code> is a real DOM node, so the browser's CSS engine handles
-      <code>:hover</code> intrinsically &mdash; no JavaScript, no hit-testing, no manual repaints.
-      A <code>transition: fill 0.15s</code> rule gives the smooth color change for free. This is
-      one of SVG's biggest ergonomic advantages over canvas-based renderers.
-    </p>
-    <pre><code class="language-css">/* SVG circles are DOM nodes — CSS :hover works out of the box */
-.dot {
-  fill: steelblue;
-  transition: fill 0.15s;
-}
+  </div><!-- /.overview-wrap -->
 
-.dot:hover {
-  fill: hotpink;
-}</code></pre>
-  </div>
-
-  </div><!-- /.right-col -->
-  </div><!-- /.page-layout -->
-
-  <script src="data.js"></script>
-  <script src="controls.js"></script>
-  <script>
-    // ── Chart skeleton (created once) ─────────────────────────────────────────
-    const margin = { top: 20, right: 20, bottom: 50, left: 55 };
-
-    const svg    = d3.select("#scatterplot");
-    const g      = svg.append("g");
-    const xScale = d3.scaleLinear().domain([0, 1]);
-    const yScale = d3.scaleLinear().domain([0, 1]);
-
-    // Axis groups + labels – created once, repositioned in resizeChart()
-    const xAxisG   = g.append("g").attr("class", "axis x-axis");
-    const xLabelEl = g.append("text").attr("class", "axis-label")
-                       .attr("text-anchor", "middle").text("X");
-    const yAxisG   = g.append("g").attr("class", "axis y-axis");
-    const yLabelEl = g.append("text").attr("class", "axis-label")
-                       .attr("transform", "rotate(-90)").attr("text-anchor", "middle").text("Y");
-
-    // ── Resize ────────────────────────────────────────────────────────────────
-    let chartW = 0, chartH = 0;
-
-    function resizeChart() {
-      const svgEl = document.getElementById("scatterplot");
-      chartW = svgEl.clientWidth  - margin.left - margin.right;
-      chartH = svgEl.clientHeight - margin.top  - margin.bottom;
-
-      g.attr("transform", `translate(${margin.left},${margin.top})`);
-      xScale.range([0, chartW]);
-      yScale.range([chartH, 0]);
-
-      xAxisG
-        .attr("transform", `translate(0,${chartH})`)
-        .call(d3.axisBottom(xScale).ticks(6).tickSize(-chartH))
-        .call(ax => ax.select(".domain").remove())
-        .call(ax => ax.selectAll(".tick line").attr("stroke", "#e8e8e8"));
-      xLabelEl.attr("x", chartW / 2).attr("y", chartH + 40);
-
-      yAxisG
-        .call(d3.axisLeft(yScale).ticks(6).tickSize(-chartW))
-        .call(ax => ax.select(".domain").remove())
-        .call(ax => ax.selectAll(".tick line").attr("stroke", "#e8e8e8"));
-      yLabelEl.attr("x", -chartH / 2).attr("y", -44);
-
-      // Snap existing dots to new positions (no animation on resize)
-      g.selectAll(".dot")
-        .attr("cx", d => xScale(d.x))
-        .attr("cy", d => yScale(d.y));
-    }
-
-    resizeChart();
-    updateDots(generateNormal(1000));
-
-    let resizeTimer;
-    window.addEventListener("resize", () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(resizeChart, 40);
-    });
-
-    // ── Update ────────────────────────────────────────────────────────────────
-    function updateDots(newData) {
-      g.selectAll(".dot")
-        .data(newData)
-        .join(
-          enter => enter.append("circle")
-            .attr("class", "dot")
-            .attr("cx", d => xScale(d.x))
-            .attr("cy", d => yScale(d.y))
-            .attr("r", 4),
-          update => update
-            .transition().duration(600).ease(d3.easeCubicInOut)
-            .attr("cx", d => xScale(d.x))
-            .attr("cy", d => yScale(d.y)),
-          exit => exit.remove()
-        );
-    }
-
-    initControls({ onRender: updateDots });
-    hljs.highlightAll();
-  </script>
 </body>
 </html>
