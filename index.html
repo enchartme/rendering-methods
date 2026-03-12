@@ -210,7 +210,7 @@
       <thead>
         <tr>
           <th style="text-align:left;">Characteristic</th>
-          <th><a href="svg.html">SVG / D3</a></th>
+          <th><a href="svg.html">SVG with D3.js</a></th>
           <th><a href="canvas.html">Canvas 2D</a></th>
           <th><a href="webgl.html">WebGL</a></th>
           <th><a href="deckgl.html">deck.gl</a></th>
@@ -240,17 +240,17 @@
         </tr>
         <tr>
           <td>CPU per frame</td>
-          <td><span class="badge badge-yellow">Medium</span> <span class="muted">(layout)</span></td>
+          <td><span class="badge badge-red">High</span> <span class="muted">(layout + draw)</span></td>
           <td><span class="badge badge-red">High</span> <span class="muted">(draw calls)</span></td>
           <td><span class="badge badge-green">Low</span></td>
           <td><span class="badge badge-green">Low</span></td>
         </tr>
         <tr>
           <td>GPU usage</td>
-          <td><span class="muted">None</span></td>
-          <td><span class="muted">Blit only</span></td>
-          <td><span class="badge badge-blue">Full rasterisation</span></td>
-          <td><span class="badge badge-blue">Full rasterisation</span></td>
+          <td><span class="badge badge-red">None</span></td>
+          <td><span class="badge badge-yellow">Blit only</span></td>
+          <td><span class="badge badge-green">Full rasterisation</span></td>
+          <td><span class="badge badge-green">Full rasterisation</span></td>
         </tr>
         <tr>
           <td>Hover / hit-testing</td>
@@ -261,7 +261,7 @@
         </tr>
         <tr>
           <td>Animations</td>
-          <td><span class="badge badge-green">CSS transitions</span></td>
+          <td><span class="badge badge-green">CSS transitions</span> <span class="badge badge-green">D3 transitions</span></td>
           <td><span class="badge badge-yellow">Manual rAF loop</span></td>
           <td><span class="badge badge-red">Manual shaders</span></td>
           <td><span class="badge badge-green">GPU transitions</span></td>
@@ -269,16 +269,16 @@
         <tr>
           <td>Zoom &amp; pan</td>
           <td>Via D3 zoom</td>
-          <td>Manual</td>
-          <td>Manual</td>
+          <td><span class="badge badge-red">Manual</span></td>
+          <td><span class="badge badge-red">Manual</span></td>
           <td><span class="badge badge-green">Built-in</span></td>
         </tr>
         <tr>
           <td>Code size (this demo)</td>
-          <td>75 lines</td>
-          <td>269 lines</td>
-          <td>407 lines</td>
-          <td>249 lines</td>
+          <td><span class="badge badge-green">75 lines</span></td>
+          <td><span class="badge badge-yellow">269 lines</span></td>
+          <td><span class="badge badge-red">407 lines</span></td>
+          <td><span class="badge badge-yellow">249 lines</span></td>
         </tr>
         <tr>
           <td>Best for</td>
