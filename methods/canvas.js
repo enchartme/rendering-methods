@@ -77,7 +77,7 @@ function drawAxes() {
   ctx.save();
 
   // grid lines
-  ctx.strokeStyle = '#e8e8e8';
+  ctx.strokeStyle = '#2c2c52';
   ctx.lineWidth = 1;
   for (const v of TICKS) {
     // vertical
@@ -93,7 +93,7 @@ function drawAxes() {
   }
 
   // tick labels
-  ctx.fillStyle    = '#555';
+  ctx.fillStyle    = '#b8b8d8';
   ctx.font         = '11px sans-serif';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'top';
@@ -108,7 +108,7 @@ function drawAxes() {
   }
 
   // axis labels
-  ctx.fillStyle    = '#444';
+  ctx.fillStyle    = '#b8b8d8';
   ctx.font         = '12px sans-serif';
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'bottom';
@@ -153,11 +153,11 @@ function drawDots() {
 
       if (isHovered) {
         ctx.fillStyle   = '#e678e9';
-        ctx.strokeStyle = '#e678e9';
+        ctx.strokeStyle = '#0a0032';
         ctx.lineWidth   = 0.5;
-      } else {
-        ctx.fillStyle   = 'rgba(92,84,248,0.7)'; // otter swim blue @ 70%
-        ctx.strokeStyle = '#3229f7';
+        } else {
+        ctx.fillStyle   = 'rgba(244,190,0,0.7)'; // otter shine gold @ 70%
+        ctx.strokeStyle = '#0a0032';
         ctx.lineWidth   = 0.5;
       }
 

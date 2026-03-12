@@ -30,7 +30,7 @@ function drawAxes() {
   const yPxAx = v => margin.top  + (1 - v) * plotH;
 
   // Grid lines
-  ax.strokeStyle = '#e8e8e8';
+  ax.strokeStyle = '#2c2c52';
   ax.lineWidth   = 1;
   for (const v of TICKS) {
     ax.beginPath();
@@ -45,7 +45,7 @@ function drawAxes() {
   }
 
   // Tick labels
-  ax.fillStyle    = '#555';
+  ax.fillStyle    = '#b8b8d8';
   ax.font         = `11px sans-serif`;
   ax.textAlign    = 'center';
   ax.textBaseline = 'top';
@@ -56,7 +56,7 @@ function drawAxes() {
   for (const v of TICKS) ax.fillText(v.toFixed(1), margin.left - 7, yPxAx(v));
 
   // Axis labels
-  ax.fillStyle    = '#444';
+  ax.fillStyle    = '#b8b8d8';
   ax.font         = '12px sans-serif';
   ax.textAlign    = 'center';
   ax.textBaseline = 'bottom';
@@ -118,10 +118,11 @@ function buildLayer() {
     // otter swim blue (70% opacity) or otter play pink on hover
     getFillColor: d => d.id === hoveredId
       ? [230, 120, 233, 255]
-      : [92, 84, 248, 178],
+      : [244, 190, 0, 178],
 
-    // Line width 0 (no stroke)
-    stroked: false,
+    stroked: true,
+    getLineColor: [10, 0, 50, 255],   // otter sleep night
+    lineWidthMinPixels: 1,
 
     coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
 

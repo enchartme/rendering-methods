@@ -40,7 +40,7 @@
     <div class="controls-group">
       <span>Points:</span>
       <button class="btn" id="btn-div10">&divide;10</button>
-      <span id="n-display" style="font-size:0.85rem;color:#444;min-width:3.5rem;text-align:center;">1 000</span>
+      <span id="n-display" style="font-size:0.85rem;color:#b8b8d8;min-width:3.5rem;text-align:center;">1 000</span>
       <button class="btn" id="btn-mul10">&times;10</button>
     </div>
   </div>
@@ -90,11 +90,11 @@
 
         if (isHovered) {
         ctx.fillStyle   = '#e678e9';
-        ctx.strokeStyle = '#e678e9';
+        ctx.strokeStyle = '#0a0032';
         ctx.lineWidth   = 0.5;
         } else {
-        ctx.fillStyle   = 'rgba(92,84,248,0.7)'; // otter swim blue @ 70%
-        ctx.strokeStyle = '#3229f7';
+        ctx.fillStyle   = 'rgba(244,190,0,0.7)'; // otter shine gold @ 70%
+        ctx.strokeStyle = '#0a0032';
         ctx.lineWidth   = 0.5;
         }
 
@@ -136,7 +136,7 @@ for (let i = 0; i &lt; particles.length; i++) {
 }
 
 // 3. Color branch — hovered dot is drawn on top in the second pass
-ctx.fillStyle = isHovered ? '#e678e9' : 'rgba(92,84,248,0.7)';</code></pre>
+ctx.fillStyle = isHovered ? '#e678e9' : 'rgba(244,190,0,0.7)';</code></pre>
   </div>
 
   <p class="github-link">See the <a href="https://github.com/enchartme/rendering-methods/blob/main/methods/canvas.js">complete implementation</a> on GitHub (269 lines)</p>

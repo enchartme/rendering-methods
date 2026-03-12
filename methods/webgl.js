@@ -53,11 +53,15 @@ const FS_SOURCE = `
     float alpha = 1.0 - smoothstep(0.42, 0.5, d);
     if (alpha < 0.001) discard;
 
-    // otter swim blue (70% opacity) ↔ otter play pink (100% opacity)
-    vec3  blue  = vec3(0.361, 0.329, 0.973);
+    // otter shine gold (70% opacity) ↔ otter play pink (100% opacity)
+    vec3  blue  = vec3(0.957, 0.745, 0.000);
     vec3  pink  = vec3(0.902, 0.471, 0.914);
     vec3  color = mix(blue, pink, v_hover);
     float baseA = mix(0.7, 1.0, v_hover);
+
+    // Stroke ring: otter sleep night near the circle edge
+    vec3  stroke = vec3(0.039, 0.000, 0.196);  // #0a0032
+    color = mix(color, stroke, smoothstep(0.34, 0.39, d));
 
     gl_FragColor = vec4(color, baseA * alpha);
   }
@@ -140,7 +144,7 @@ function drawAxes() {
   const yPxAx = v => margin.top  + (1 - v) * plotH;
 
   // Grid lines
-  ax.strokeStyle = '#e8e8e8';
+  ax.strokeStyle = '#2c2c52';
   ax.lineWidth   = 1;
   for (const v of TICKS) {
     ax.beginPath();
@@ -155,7 +159,7 @@ function drawAxes() {
   }
 
   // Tick labels
-  ax.fillStyle    = '#555';
+  ax.fillStyle    = '#b8b8d8';
   ax.font         = '11px sans-serif';
   ax.textAlign    = 'center';
   ax.textBaseline = 'top';
@@ -166,7 +170,7 @@ function drawAxes() {
   for (const v of TICKS) ax.fillText(v.toFixed(1), margin.left - 7, yPxAx(v));
 
   // Axis labels
-  ax.fillStyle    = '#444';
+  ax.fillStyle    = '#b8b8d8';
   ax.font         = '12px sans-serif';
   ax.textAlign    = 'center';
   ax.textBaseline = 'bottom';

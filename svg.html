@@ -17,23 +17,23 @@
 
     .axis text {
       font-size: 11px;
-      fill: #555;
+      fill: #b8b8d8;
     }
 
     .axis line,
     .axis path {
-      stroke: #bbb;
+      stroke: #2c2c52;
     }
 
     .axis-label {
       font-size: 12px;
-      fill: #444;
+      fill: #b8b8d8;
     }
 
     .dot {
-      fill: #5c54f8;
+      fill: #f4be00;
       fill-opacity: 0.7;
-      stroke: #3229f7;
+      stroke: #0a0032;
       stroke-width: 0.5;
       cursor: default;
       transition: fill 0.15s;
@@ -68,7 +68,7 @@
     <div class="controls-group">
       <span>Points:</span>
       <button class="btn" id="btn-div10">&divide;10</button>
-      <span id="n-display" style="font-size:0.85rem;color:#444;min-width:3.5rem;text-align:center;">1 000</span>
+      <span id="n-display" style="font-size:0.85rem;color:#b8b8d8;min-width:3.5rem;text-align:center;">1 000</span>
       <button class="btn" id="btn-mul10">&times;10</button>
     </div>
   </div>
@@ -123,7 +123,9 @@
     </p>
     <pre><code class="language-css">/* SVG circles are DOM nodes — CSS :hover works out of the box */
 .dot {
-  fill: #5c54f8;
+  fill: #f4be00;
+  stroke: #0a0032;
+  stroke-width: 0.5;
   transition: fill 0.15s;
 }
 

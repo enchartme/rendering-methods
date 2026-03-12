@@ -30,13 +30,13 @@ function resizeChart() {
     .attr("transform", `translate(0,${chartH})`)
     .call(d3.axisBottom(xScale).ticks(6).tickSize(-chartH))
     .call(ax => ax.select(".domain").remove())
-    .call(ax => ax.selectAll(".tick line").attr("stroke", "#e8e8e8"));
+    .call(ax => ax.selectAll(".tick line").attr("stroke", "#2c2c52"));
   xLabelEl.attr("x", chartW / 2).attr("y", chartH + 40);
 
   yAxisG
     .call(d3.axisLeft(yScale).ticks(6).tickSize(-chartW))
     .call(ax => ax.select(".domain").remove())
-    .call(ax => ax.selectAll(".tick line").attr("stroke", "#e8e8e8"));
+    .call(ax => ax.selectAll(".tick line").attr("stroke", "#2c2c52"));
   yLabelEl.attr("x", -chartH / 2).attr("y", -44);
 
   // Snap existing dots to new positions (no animation on resize)
