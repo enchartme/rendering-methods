@@ -66,6 +66,64 @@
       justify-content: center;
     }
 
+    .page-nav-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      margin-bottom: 0;
+      height: 75px;
+    }
+
+    @keyframes finger-nudge-left {
+      0%   { left: -5px; }
+      50%  { left: -15px; }
+      100% { left: -5px; }
+    }
+
+    .image-container {
+      position: relative;
+      top: -10px
+    }
+
+    .page-nav-row .pointing-finger-left {
+      height: clamp(60px, calc(45px + 8.75vw), 190px);
+      width: auto;
+      display: block;
+      position: relative;
+      transform: rotate(6deg);
+      animation: finger-nudge-left 1.6s ease-in-out infinite;
+    }
+
+    @keyframes finger-nudge-right {
+      0%   { right: -5px; }
+      50%  { right: -15px; }
+      100% { right: -5px; }
+    }
+
+    .page-nav-row .pointing-finger-right {
+      height: clamp(60px, calc(45px + 8.75vw), 190px);
+      width: auto;
+      display: block;
+      position: relative;
+      transform: rotate(171deg);
+      animation: finger-nudge-right 1.6s ease-in-out infinite;
+    }
+
+    .hint {
+      font-style: italic;
+      color: #e5ffff;
+    }
+
+    .page-nav a {
+      color: #f4be00;
+      border: 1px solid #f4be00;
+    }
+    .page-nav a:hover {
+      background: #f4be00;
+      color: #0a0032;
+    }
+
     .intro {
       font-size: 1rem;
       line-height: 1.75;
@@ -191,12 +249,21 @@
         Johnnie Hård, <a href="https://synvinkel.org/" target="_blank">Synvinkel Aktiebolag</a>
       </p>
       <p class="author"></p>
-      <nav class="page-nav">
-        <a href="svg.html">SVG</a>
-        <a href="canvas.html">Canvas</a>
-        <a href="webgl.html">WebGL</a>
-        <a href="deckgl.html">deck.gl</a>
-      </nav>
+      <div class="page-nav-row">
+        <div class="image-container">
+          <img src="lib/pointing-finger.png" alt="" class="pointing-finger-left" aria-hidden="true">
+        </div>
+        <nav class="page-nav">
+          <a href="svg.html">SVG</a>
+          <a href="canvas.html">Canvas</a>
+          <a href="webgl.html">WebGL</a>
+          <a href="deckgl.html">deck.gl</a>
+        </nav>
+        <div class="image-container">
+          <img src="lib/pointing-finger.png" alt="" class="pointing-finger-right" aria-hidden="true">
+        </div>
+      </div>
+      <div class="hint">Press to see interactive demonstrations</div>
     </header>
 
     <p class="intro">
